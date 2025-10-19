@@ -15,8 +15,13 @@ if __name__ == "__main__":
     print(f"client username is: {client_username}")
     print(f"client password: ***")
     client.login(client_username, client_password)
+    client_did = client.me.did
     print("Getting data")
-    data = client.get_timeline(cursor='', limit=30)
+    data = client.get_author_feed(
+        actor=client_did,
+        filter='posts_and_author_threads',
+        limit=30,
+    )
     feed = data.feed
     print(feed)
     next_page = data.cursor
