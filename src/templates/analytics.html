@@ -2,22 +2,107 @@
 {% block content %}
 <div class="analytics-container">
     <h1>Analytics Dashboard</h1>
-    <div class="chart-box">
-        <canvas id="salesChart"></canvas>
-    </div>
+        <h2> Total Posts per Month</h2>
+        <div class="chart-box">
+            <canvas id="totalPostsChart"></canvas>
+        </div>
+        <h2> Total Likes per Month</h2>
+        <div class="chart-box">
+            <canvas id="totalLikesChart"></canvas>
+        </div>
+        <h2> Average Likes per Month</h2>
+        <div class="chart-box">
+            <canvas id="averageLikesChart"></canvas>
+        </div>
 </div>
 
 <script>
-    const chartData = {{ chart_data | tojson }};
+    const chartData1 = {{ total_likes | tojson }};
+    const chartData2 = {{ avg_likes | tojson }};
+    const chartData3 = {{ total_posts | tojson }};
     
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    new Chart(ctx, {
+    const ctx1 = document.getElementById('totalLikesChart').getContext('2d');
+    const ctx2 = document.getElementById('averageLikesChart').getContext('2d');
+    const ctx3 = document.getElementById('totalPostsChart').getContext('2d');
+    new Chart(ctx1, {
         type: 'bar',
         data: {
-            labels: chartData.labels,
+            labels: chartData1.labels,
             datasets: [{
-                label: 'Monthly Sales',
-                data: chartData.values,
+                label: 'Total Monthly Likes',
+                data: chartData1.values,
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: chartData2.labels,
+            datasets: [{
+                label: 'Average Monthly Likes',
+                data: chartData2.values,
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx3, {
+        type: 'bar',
+        data: {
+            labels: chartData3.labels,
+            datasets: [{
+                label: 'Total Monthly Posts',
+                data: chartData3.values,
                 backgroundColor: 'rgba(75, 192, 192, 0.4)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 2

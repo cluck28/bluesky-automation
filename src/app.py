@@ -5,10 +5,11 @@ from flask import Flask, redirect, render_template, request, url_for
 from flask_caching import Cache
 from werkzeug.utils import secure_filename
 
+from analytics.aggregations import likes_by_month
 from bluesky_client.get_author_feed import get_author_feed
 
 app = Flask(__name__)
-app.config['CACHE_TYPE'] = 'simple'  # or 'redis', 'filesystem', etc.
+app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
 cache = Cache(app)
 
 # Config
@@ -24,7 +25,7 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@cache.cached(timeout=600, key_prefix='common_data')
+@cache.cached(timeout=600, key_prefix="common_data")
 def get_user_feed():
     client = Client()
     client_username = os.getenv("CLIENT_USERNAME")
@@ -72,11 +73,13 @@ def gallery():
 @app.route("/analytics")
 def analytics():
     feed_posts = get_user_feed()
-    chart_data = {
-        "labels": ["January", "February", "March", "April", "May", "June"],
-        "values": [120, 190, 30, 50, 200, 130]
-    }
-    return render_template("analytics.html", chart_data=chart_data)
+    total_likes, avg_likes, total_posts = likes_by_month(feed_posts)
+    return render_template(
+        "analytics.html",
+        total_likes=total_likes,
+        avg_likes=avg_likes,
+        total_posts=total_posts,
+    )
 
 
 if __name__ == "__main__":
