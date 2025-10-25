@@ -8,7 +8,7 @@ from flask import Flask, redirect, render_template, request, url_for
 from flask_caching import Cache
 from werkzeug.utils import secure_filename
 
-from analytics.aggregations import get_user_feed_df, likes_by_month
+from analytics.aggregations import get_user_feed_df, agg_user_feed_dataframe
 from bluesky_client.get_author_feed import get_author_feed
 
 app = Flask(__name__)
@@ -16,6 +16,7 @@ app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
 cache = Cache(app)
 
 # Config
+USER_HANDLE = "pupbiscuit24.bsky.social"
 UPLOAD_FOLDER = "./static/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -39,8 +40,8 @@ def get_user_feed() -> List:
 
 
 @cache.cached(timeout=600, key_prefix="feed_df")
-def get_user_feed_dataframe(user_feed: list) -> DataFrame:
-    return get_user_feed_df(user_feed)
+def get_user_feed_dataframe(user_feed: list, handle: str) -> DataFrame:
+    return get_user_feed_df(user_feed, handle)
 
 
 @app.route("/")
@@ -81,8 +82,11 @@ def gallery():
 @app.route("/analytics")
 def analytics():
     feed_posts = get_user_feed()
-    feed_df = get_user_feed_dataframe(feed_posts)
-    total_likes, avg_likes, total_posts = likes_by_month(feed_df)
+    feed_df = get_user_feed_dataframe(feed_posts, USER_HANDLE)
+    total_likes = agg_user_feed_dataframe(feed_df, "total_likes", "like_count", "sum", "month")
+    print(total_likes)
+    total_posts = agg_user_feed_dataframe(feed_df, "total_posts", "like_count", "count", "month")
+    avg_likes = agg_user_feed_dataframe(feed_df, "average_likes", "like_count", "mean", "month")
     return render_template(
         "analytics.html",
         total_likes=total_likes,
