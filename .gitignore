@@ -209,4 +209,4 @@ __marimo__/
 # venv called bluesky
 bluesky/
 
-src/app/uploads/
+src/app/static/uploads/
