@@ -2,7 +2,7 @@ from atproto import Client
 
 from dotenv import load_dotenv
 import os
-import json
+from bluesky_client.get_author_feed import get_author_feed
 
 
 load_dotenv()  # Looks for .env in the current directory
@@ -18,21 +18,8 @@ if __name__ == "__main__":
     client.login(client_username, client_password)
     client_did = client.me.did
     print("Getting data")
-    data = client.get_author_feed(
-        actor=client_did,
-        filter='posts_and_author_threads',
-        limit=30,
-    )
-    feed = data.feed
-    for item in feed:
-        post = item.post
-        reply = item.reply
-        reason = item.reason
-        print("Post:")
-        print(post)
-        print("Reply:")
-        print(reply)
-        print("Reason:")
-        print(reason)
-    next_page = data.cursor
-    print(next_page)
+
+    data = get_author_feed(client, client_did)
+    for post in data:
+        print(post.model_dump_json(indent=2))
+    
