@@ -1,11 +1,14 @@
 import os
+import pandas as pd
+from pandas import DataFrame
 
+from typing import List
 from atproto import Client
 from flask import Flask, redirect, render_template, request, url_for
 from flask_caching import Cache
 from werkzeug.utils import secure_filename
 
-from analytics.aggregations import likes_by_month
+from analytics.aggregations import get_user_feed_df, likes_by_month
 from bluesky_client.get_author_feed import get_author_feed
 
 app = Flask(__name__)
@@ -25,14 +28,19 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@cache.cached(timeout=600, key_prefix="common_data")
-def get_user_feed():
+@cache.cached(timeout=600, key_prefix="user_feed")
+def get_user_feed() -> List:
     client = Client()
     client_username = os.getenv("CLIENT_USERNAME")
     client_password = os.getenv("CLIENT_PASSWORD")
     client.login(client_username, client_password)
     client_did = client.me.did
     return get_author_feed(client, client_did)
+
+
+@cache.cached(timeout=600, key_prefix="feed_df")
+def get_user_feed_dataframe(user_feed: list) -> DataFrame:
+    return get_user_feed_df(user_feed)
 
 
 @app.route("/")
@@ -73,7 +81,8 @@ def gallery():
 @app.route("/analytics")
 def analytics():
     feed_posts = get_user_feed()
-    total_likes, avg_likes, total_posts = likes_by_month(feed_posts)
+    feed_df = get_user_feed_dataframe(feed_posts)
+    total_likes, avg_likes, total_posts = likes_by_month(feed_df)
     return render_template(
         "analytics.html",
         total_likes=total_likes,
