@@ -9,7 +9,7 @@ from bluesky_client.get_author_feed import get_author_feed
 app = Flask(__name__)
 
 # Config
-UPLOAD_FOLDER = "uploads"
+UPLOAD_FOLDER = "./static/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -51,7 +51,7 @@ def gallery():
     client.login(client_username, client_password)
     client_did = client.me.did
     feed_posts = get_author_feed(client, client_did)
-    external_paths = [feed_posts[0].embed.thumbnail]
+    external_paths = [thumb.embed.thumbnail for thumb in feed_posts]
     return render_template(
         "gallery.html", media_paths=media_paths, external_paths=external_paths
     )
