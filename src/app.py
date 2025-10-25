@@ -54,7 +54,10 @@ def gallery():
     external_paths = [thumb.embed.thumbnail for thumb in feed_posts]
     likes = [post.like_count for post in feed_posts]
     return render_template(
-        "gallery.html", media_paths=media_paths, external_paths=external_paths, likes=likes
+        "gallery.html",
+        media_paths=media_paths,
+        external_paths=external_paths,
+        likes=likes,
     )
 
 
