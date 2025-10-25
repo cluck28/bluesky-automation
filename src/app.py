@@ -2,11 +2,14 @@ import os
 
 from atproto import Client
 from flask import Flask, redirect, render_template, request, url_for
+from flask_caching import Cache
 from werkzeug.utils import secure_filename
 
 from bluesky_client.get_author_feed import get_author_feed
 
 app = Flask(__name__)
+app.config['CACHE_TYPE'] = 'simple'  # or 'redis', 'filesystem', etc.
+cache = Cache(app)
 
 # Config
 UPLOAD_FOLDER = "./static/uploads"
@@ -19,6 +22,16 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@cache.cached(timeout=600, key_prefix='common_data')
+def get_user_feed():
+    client = Client()
+    client_username = os.getenv("CLIENT_USERNAME")
+    client_password = os.getenv("CLIENT_PASSWORD")
+    client.login(client_username, client_password)
+    client_did = client.me.did
+    return get_author_feed(client, client_did)
 
 
 @app.route("/")
@@ -45,12 +58,7 @@ def upload():
 def gallery():
     media_files = os.listdir(app.config["UPLOAD_FOLDER"])
     media_paths = [os.path.join(app.config["UPLOAD_FOLDER"], f) for f in media_files]
-    client = Client()
-    client_username = os.getenv("CLIENT_USERNAME")
-    client_password = os.getenv("CLIENT_PASSWORD")
-    client.login(client_username, client_password)
-    client_did = client.me.did
-    feed_posts = get_author_feed(client, client_did)
+    feed_posts = get_user_feed()
     external_paths = [thumb.embed.thumbnail for thumb in feed_posts]
     likes = [post.like_count for post in feed_posts]
     return render_template(
@@ -63,7 +71,12 @@ def gallery():
 
 @app.route("/analytics")
 def analytics():
-    return render_template("analytics.html")
+    feed_posts = get_user_feed()
+    chart_data = {
+        "labels": ["January", "February", "March", "April", "May", "June"],
+        "values": [120, 190, 30, 50, 200, 130]
+    }
+    return render_template("analytics.html", chart_data=chart_data)
 
 
 if __name__ == "__main__":

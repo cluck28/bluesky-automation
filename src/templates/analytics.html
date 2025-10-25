@@ -1,7 +1,51 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center">
-    <h1>Analytics Page</h1>
-    <p>Here's where you'll learn how to grow your account.</p>
+<div class="analytics-container">
+    <h1>Analytics Dashboard</h1>
+    <div class="chart-box">
+        <canvas id="salesChart"></canvas>
+    </div>
 </div>
+
+<script>
+    const chartData = {{ chart_data | tojson }};
+    
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Monthly Sales',
+                data: chartData.values,
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}
