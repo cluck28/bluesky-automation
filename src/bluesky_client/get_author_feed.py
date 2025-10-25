@@ -52,11 +52,7 @@ def parse_embed(embed) -> Embed:
         )
 
 
-def get_author_feed(
-    client: Client,
-    client_did: str,
-    limit: int = 30
-) -> List[Post]:
+def get_author_feed(client: Client, client_did: str, limit: int = 30) -> List[Post]:
     cursor = None
     cleaned_data = []
     while True:
