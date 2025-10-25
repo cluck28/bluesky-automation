@@ -8,6 +8,7 @@ class Author(BaseModel):
 
 class BskyRecord(BaseModel):
     text: str
+    tags: list
 
 
 class Embed(BaseModel):
