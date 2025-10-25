@@ -2,6 +2,7 @@ from atproto import Client
 
 from dotenv import load_dotenv
 import os
+import json
 
 
 load_dotenv()  # Looks for .env in the current directory
@@ -23,6 +24,15 @@ if __name__ == "__main__":
         limit=30,
     )
     feed = data.feed
-    print(feed)
+    for item in feed:
+        post = item.post
+        reply = item.reply
+        reason = item.reason
+        print("Post:")
+        print(post)
+        print("Reply:")
+        print(reply)
+        print("Reason:")
+        print(reason)
     next_page = data.cursor
     print(next_page)
