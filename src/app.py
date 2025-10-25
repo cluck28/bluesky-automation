@@ -52,8 +52,9 @@ def gallery():
     client_did = client.me.did
     feed_posts = get_author_feed(client, client_did)
     external_paths = [thumb.embed.thumbnail for thumb in feed_posts]
+    likes = [post.like_count for post in feed_posts]
     return render_template(
-        "gallery.html", media_paths=media_paths, external_paths=external_paths
+        "gallery.html", media_paths=media_paths, external_paths=external_paths, likes=likes
     )
 
 
