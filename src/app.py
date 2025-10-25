@@ -61,5 +61,10 @@ def gallery():
     )
 
 
+@app.route("/analytics")
+def analytics():
+    return render_template("analytics.html")
+
+
 if __name__ == "__main__":
     app.run(debug=True)
