@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 from analytics.aggregations import (
     agg_user_feed_dataframe,
     get_user_feed_df,
-    stacked_agg_user_feed_dataframe
+    stacked_agg_user_feed_dataframe,
 )
 from bluesky_client.get_author_feed import get_author_feed
 
