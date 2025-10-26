@@ -14,6 +14,8 @@ from analytics.aggregations import (
     stacked_agg_user_feed_dataframe,
 )
 from bluesky_client.get_author_feed import get_author_feed
+from bluesky_client.get_profile import get_profile, get_follows, get_followers
+from bluesky_client.schemas.profile import Profile, Follower
 
 app = Flask(__name__)
 app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
@@ -46,6 +48,36 @@ def get_user_feed() -> List:
 @cache.cached(timeout=600, key_prefix="feed_df")
 def get_user_feed_dataframe(user_feed: list, handle: str) -> DataFrame:
     return get_user_feed_df(user_feed, handle)
+
+
+@cache.cached(timeout=600, key_prefix="user_profile")
+def get_user_profile() -> Profile:
+    client = Client()
+    client_username = os.getenv("CLIENT_USERNAME")
+    client_password = os.getenv("CLIENT_PASSWORD")
+    client.login(client_username, client_password)
+    client_did = client.me.did
+    return get_profile(client, client_did)
+
+
+@cache.cached(timeout=600, key_prefix="user_follows")
+def get_user_follows() -> Follower:
+    client = Client()
+    client_username = os.getenv("CLIENT_USERNAME")
+    client_password = os.getenv("CLIENT_PASSWORD")
+    client.login(client_username, client_password)
+    client_did = client.me.did
+    return get_follows(client, client_did)
+
+
+@cache.cached(timeout=600, key_prefix="user_followers")
+def get_user_followers() -> Follower:
+    client = Client()
+    client_username = os.getenv("CLIENT_USERNAME")
+    client_password = os.getenv("CLIENT_PASSWORD")
+    client.login(client_username, client_password)
+    client_did = client.me.did
+    return get_followers(client, client_did)
 
 
 @app.route("/")
@@ -89,6 +121,12 @@ def analytics():
 
     feed_posts = get_user_feed()
     feed_df = get_user_feed_dataframe(feed_posts, USER_HANDLE)
+    user_profile = get_user_profile()
+    user_follows = get_user_follows()
+    user_followers = get_user_followers()
+    #print(user_profile.model_dump())
+    #print([user.model_dump() for user in user_follows])
+    print([user.model_dump() for user in user_followers])
     total_likes = agg_user_feed_dataframe(
         feed_df, "total_likes", "like_count", "sum", period
     )
