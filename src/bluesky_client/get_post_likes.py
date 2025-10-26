@@ -6,7 +6,9 @@ from atproto import Client
 from bluesky_client.schemas.like import Like
 
 
-def get_post_likes(client: Client, user_feed: list, user_handle: str, limit: int = 100) -> List[Like]:
+def get_post_likes(
+    client: Client, user_feed: list, user_handle: str, limit: int = 100
+) -> List[Like]:
     cleaned_data = []
     for item in user_feed:
         if item.author.handle != user_handle:

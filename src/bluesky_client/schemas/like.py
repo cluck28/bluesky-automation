@@ -8,4 +8,3 @@ class Like(BaseModel):
     post_indexed_at: datetime
     indexed_at: datetime
     actor: str
-    

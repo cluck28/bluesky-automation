@@ -21,8 +21,8 @@ from analytics.top_posts import (
     get_most_reposted_post,
 )
 from bluesky_client.get_author_feed import get_author_feed
-from bluesky_client.get_profile import get_followers, get_follows, get_profile
 from bluesky_client.get_post_likes import get_post_likes
+from bluesky_client.get_profile import get_followers, get_follows, get_profile
 from bluesky_client.schemas.profile import Follower, Profile
 
 app = Flask(__name__)
@@ -79,6 +79,7 @@ def get_user_follows() -> list:
 def get_user_followers() -> list:
     client, client_did = login_client()
     return get_followers(client, client_did)
+
 
 @cache.cached(timeout=3600, key_prefix="post_likes")
 def get_user_post_likes(user_feed: list) -> list:
