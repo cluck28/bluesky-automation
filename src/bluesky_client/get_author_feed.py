@@ -59,7 +59,7 @@ def get_author_feed(client: Client, client_did: str, limit: int = 30) -> List[Po
         data = client.get_author_feed(
             actor=client_did,
             filter="posts_and_author_threads",
-            limit=50,
+            limit=limit,
             cursor=cursor,
         )
         if not data.feed:
