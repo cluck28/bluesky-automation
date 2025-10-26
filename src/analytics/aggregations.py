@@ -9,6 +9,7 @@ def get_user_feed_df(user_feed: list, user_handle: str) -> DataFrame:
     data = []
     for post in user_feed:
         ts = post.indexed_at
+        embed_type = post.embed.embed_type
         likes = post.like_count
         reposts = post.repost_count
         replies = post.reply_count
@@ -19,6 +20,7 @@ def get_user_feed_df(user_feed: list, user_handle: str) -> DataFrame:
             data.append(
                 {
                     "indexed_at": ts,
+                    "embed_type": embed_type,
                     "like_count": likes,
                     "reply_count": replies,
                     "quote_count": quotes,
@@ -115,6 +117,64 @@ def stacked_agg_user_feed_dataframe(feed_df: DataFrame, agg: str, period: str) -
                 "label": "Bookmarks",
                 "data": agg_df["bookmark_count"].to_list(),
                 "backgroundColor": "rgba(75, 192, 192, 0.6)",
+            },
+        ],
+    }
+
+
+def embed_type_agg_user_feed_dataframe(
+    feed_df: DataFrame, agg_column: str, column: str, agg: str, period: str
+) -> Dict:
+    df = feed_df
+    df["indexed_at"] = pd.to_datetime(df["indexed_at"])
+    if period == "day":
+        df["cohort"] = df["indexed_at"].dt.to_period("D")
+    elif period == "week":
+        df["cohort"] = df["indexed_at"].dt.to_period("W")
+    elif period == "month":
+        df["cohort"] = df["indexed_at"].dt.to_period("M")
+    elif period == "quarter":
+        df["cohort"] = df["indexed_at"].dt.to_period("Q")
+    elif period == "year":
+        df["cohort"] = df["indexed_at"].dt.to_period("Y")
+    else:
+        df["cohort"] = df["indexed_at"].dt.to_period("M")
+    # Aggregate — for example, sum of values per month
+    agg_df = df.groupby(["cohort", "embed_type"], as_index=False).agg(
+        agg_column=(column, agg),
+    )
+    agg_df["cohort"] = agg_df["cohort"].astype(str)
+    agg_df[agg_column] = agg_df["agg_column"]
+    # We need to infill values where we are missing date <> embed_type combos
+    all_periods = agg_df["cohort"].unique()
+    all_types = agg_df["embed_type"].unique()
+    full_index = pd.MultiIndex.from_product(
+        [all_periods, all_types], names=["cohort", "embed_type"]
+    )
+    df_full = (
+        agg_df.set_index(["cohort", "embed_type"])
+        .reindex(full_index, fill_value=0)
+        .reset_index()
+    )
+    return {
+        "labels": df_full[df_full["embed_type"] == "images"]["cohort"].to_list(),
+        "datasets": [
+            {
+                "label": "Images",
+                "data": df_full[df_full["embed_type"] == "images"][
+                    agg_column
+                ].to_list(),
+                "backgroundColor": "rgba(255, 99, 132, 0.6)",
+            },
+            {
+                "label": "Video",
+                "data": df_full[df_full["embed_type"] == "video"][agg_column].to_list(),
+                "backgroundColor": "rgba(54, 162, 235, 0.6)",
+            },
+            {
+                "label": "Other",
+                "data": df_full[df_full["embed_type"] == "other"][agg_column].to_list(),
+                "backgroundColor": "rgba(255, 206, 86, 0.6)",
             },
         ],
     }

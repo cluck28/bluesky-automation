@@ -10,15 +10,18 @@ from werkzeug.utils import secure_filename
 
 from analytics.aggregations import (
     agg_user_feed_dataframe,
+    embed_type_agg_user_feed_dataframe,
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
 )
+from analytics.engagement import get_engagement_score, get_likes_df
 from analytics.top_posts import (
     get_most_bookmarked_post,
     get_most_liked_post,
     get_most_reposted_post,
 )
 from bluesky_client.get_author_feed import get_author_feed
+from bluesky_client.get_post_likes import get_post_likes
 from bluesky_client.get_profile import get_followers, get_follows, get_profile
 from bluesky_client.schemas.profile import Follower, Profile
 
@@ -40,13 +43,18 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@cache.cached(timeout=600, key_prefix="user_feed")
-def get_user_feed() -> List:
+def login_client() -> tuple[Client, str]:
     client = Client()
     client_username = os.getenv("CLIENT_USERNAME")
     client_password = os.getenv("CLIENT_PASSWORD")
     client.login(client_username, client_password)
     client_did = client.me.did
+    return client, client_did
+
+
+@cache.cached(timeout=600, key_prefix="user_feed")
+def get_user_feed() -> List:
+    client, client_did = login_client()
     return get_author_feed(client, client_did)
 
 
@@ -57,32 +65,31 @@ def get_user_feed_dataframe(user_feed: list, handle: str) -> DataFrame:
 
 @cache.cached(timeout=600, key_prefix="user_profile")
 def get_user_profile() -> Profile:
-    client = Client()
-    client_username = os.getenv("CLIENT_USERNAME")
-    client_password = os.getenv("CLIENT_PASSWORD")
-    client.login(client_username, client_password)
-    client_did = client.me.did
+    client, client_did = login_client()
     return get_profile(client, client_did)
 
 
 @cache.cached(timeout=600, key_prefix="user_follows")
-def get_user_follows() -> Follower:
-    client = Client()
-    client_username = os.getenv("CLIENT_USERNAME")
-    client_password = os.getenv("CLIENT_PASSWORD")
-    client.login(client_username, client_password)
-    client_did = client.me.did
+def get_user_follows() -> list:
+    client, client_did = login_client()
     return get_follows(client, client_did)
 
 
 @cache.cached(timeout=600, key_prefix="user_followers")
-def get_user_followers() -> Follower:
-    client = Client()
-    client_username = os.getenv("CLIENT_USERNAME")
-    client_password = os.getenv("CLIENT_PASSWORD")
-    client.login(client_username, client_password)
-    client_did = client.me.did
+def get_user_followers() -> list:
+    client, client_did = login_client()
     return get_followers(client, client_did)
+
+
+@cache.cached(timeout=3600, key_prefix="post_likes")
+def get_user_post_likes(user_feed: list) -> list:
+    client, _ = login_client()
+    return get_post_likes(client, user_feed, USER_HANDLE)
+
+
+@cache.cached(timeout=3600, key_prefix="likes_df")
+def get_likes_dataframe(likes: list, follows: list, followers: list) -> DataFrame:
+    return get_likes_df(likes, follows, followers)
 
 
 @app.route("/")
@@ -123,14 +130,17 @@ def gallery():
 @app.route("/analytics", methods=["GET"])
 def analytics():
     period = request.args.get("period", "month")  # default to month
-
     feed_posts = get_user_feed()
     feed_df = get_user_feed_dataframe(feed_posts, USER_HANDLE)
     user_profile = get_user_profile()
     handle = user_profile.handle
-    followers = user_profile.followers_count
-    following = user_profile.follows_count
-    engagement_rate = 100
+    followers_count = user_profile.followers_count
+    following_count = user_profile.follows_count
+    likes_data = get_user_post_likes(feed_posts)
+    followers = get_user_followers()
+    follows = get_user_follows()
+    likes_df = get_likes_dataframe(likes_data, follows, followers)
+    engagement_rate = get_engagement_score(likes_df, followers_count)
     total_likes = agg_user_feed_dataframe(
         feed_df, "total_likes", "like_count", "sum", period
     )
@@ -155,11 +165,14 @@ def analytics():
     top_reposted_post_img, top_reposted_post_count = get_most_reposted_post(
         feed_posts, USER_HANDLE
     )
+    avg_likes_by_type = embed_type_agg_user_feed_dataframe(
+        feed_df, "average_likes", "like_count", "mean", period
+    )
     return render_template(
         "analytics.html",
         handle=handle,
-        followers=followers,
-        following=following,
+        followers=followers_count,
+        following=following_count,
         posts=posts,
         engagement_rate=engagement_rate,
         average_likes=average_likes,
@@ -174,7 +187,19 @@ def analytics():
         total_posts=total_posts,
         stacked_totals=stacked_totals,
         stacked_averages=stacked_averages,
+        average_likes_by_type=avg_likes_by_type,
     )
+
+
+@app.route("/engagement", methods=["GET"])
+def engagement():
+    feed_posts = get_user_feed()
+    likes_data = get_user_post_likes(feed_posts)
+    followers = get_user_followers()
+    follows = get_user_follows()
+    likes_df = get_likes_dataframe(likes_data, follows, followers)
+    print(likes_df)
+    return render_template("engagement.html")
 
 
 if __name__ == "__main__":
