@@ -19,6 +19,7 @@ from analytics.top_posts import (
     get_most_liked_post,
     get_most_reposted_post,
 )
+from analytics.engagement import get_engagement_score
 from bluesky_client.get_author_feed import get_author_feed
 from bluesky_client.get_profile import get_followers, get_follows, get_profile
 from bluesky_client.schemas.profile import Follower, Profile
@@ -123,7 +124,7 @@ def analytics():
     handle = user_profile.handle
     followers = user_profile.followers_count
     following = user_profile.follows_count
-    engagement_rate = 100
+    engagement_rate = get_engagement_score()
     total_likes = agg_user_feed_dataframe(
         feed_df, "total_likes", "like_count", "sum", period
     )
@@ -171,6 +172,10 @@ def analytics():
         average_likes_by_type=avg_likes_by_type,
     )
 
+
+@app.route("/engagement", methods=["GET"])
+def engagement():
+    return render_template("engagement.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
