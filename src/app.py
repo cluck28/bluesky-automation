@@ -20,7 +20,7 @@ app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
 cache = Cache(app)
 
 # Config
-USER_HANDLE = os.getenv("CLIENT_HANDLE")
+USER_HANDLE = os.getenv("CLIENT_USERNAME")
 UPLOAD_FOLDER = "./static/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
