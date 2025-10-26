@@ -1,6 +1,8 @@
-from atproto import Client
 from typing import List
-from bluesky_client.schemas.profile import Profile, Follower
+
+from atproto import Client
+
+from bluesky_client.schemas.profile import Follower, Profile
 
 
 def get_profile(client: Client, client_did: str) -> Profile:

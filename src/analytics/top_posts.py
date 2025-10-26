@@ -1,6 +1,6 @@
 def get_most_liked_post(user_feed: list, user_handle: str) -> str:
     most_likes = 0
-    url = ''
+    url = ""
     for post in user_feed:
         if post.author.handle == user_handle:
             if post.like_count > most_likes:
@@ -11,7 +11,7 @@ def get_most_liked_post(user_feed: list, user_handle: str) -> str:
 
 def get_most_replied_post(user_feed: list, user_handle: str) -> str:
     most_replies = 0
-    url = ''
+    url = ""
     for post in user_feed:
         if post.author.handle == user_handle:
             if post.reply_count > most_replies:
@@ -22,7 +22,7 @@ def get_most_replied_post(user_feed: list, user_handle: str) -> str:
 
 def get_most_reposted_post(user_feed: list, user_handle: str) -> str:
     most_reposts = 0
-    url = ''
+    url = ""
     for post in user_feed:
         if post.author.handle == user_handle:
             if post.repost_count > most_reposts:
@@ -33,7 +33,7 @@ def get_most_reposted_post(user_feed: list, user_handle: str) -> str:
 
 def get_most_bookmarked_post(user_feed: list, user_handle: str) -> str:
     most_bookmarks = 0
-    url = ''
+    url = ""
     for post in user_feed:
         if post.author.handle == user_handle:
             if post.bookmark_count > most_bookmarks:

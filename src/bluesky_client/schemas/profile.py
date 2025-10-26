@@ -11,6 +11,7 @@ class Profile(BaseModel):
     follows_count: int
     created_at: datetime
 
+
 class Follower(BaseModel):
     did: str
     handle: str

@@ -13,10 +13,14 @@ from analytics.aggregations import (
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
 )
-from analytics.top_posts import get_most_liked_post, get_most_reposted_post, get_most_bookmarked_post
+from analytics.top_posts import (
+    get_most_bookmarked_post,
+    get_most_liked_post,
+    get_most_reposted_post,
+)
 from bluesky_client.get_author_feed import get_author_feed
-from bluesky_client.get_profile import get_profile, get_follows, get_followers
-from bluesky_client.schemas.profile import Profile, Follower
+from bluesky_client.get_profile import get_followers, get_follows, get_profile
+from bluesky_client.schemas.profile import Follower, Profile
 
 app = Flask(__name__)
 app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
@@ -142,9 +146,15 @@ def analytics():
     print(average_likes)
     stacked_totals = stacked_agg_user_feed_dataframe(feed_df, "sum", period)
     stacked_averages = stacked_agg_user_feed_dataframe(feed_df, "mean", period)
-    top_liked_post_img, top_liked_post_count = get_most_liked_post(feed_posts, USER_HANDLE)
-    top_bookmarked_post_img, top_bookmarked_post_count = get_most_bookmarked_post(feed_posts, USER_HANDLE)
-    top_reposted_post_img, top_reposted_post_count = get_most_reposted_post(feed_posts, USER_HANDLE)
+    top_liked_post_img, top_liked_post_count = get_most_liked_post(
+        feed_posts, USER_HANDLE
+    )
+    top_bookmarked_post_img, top_bookmarked_post_count = get_most_bookmarked_post(
+        feed_posts, USER_HANDLE
+    )
+    top_reposted_post_img, top_reposted_post_count = get_most_reposted_post(
+        feed_posts, USER_HANDLE
+    )
     return render_template(
         "analytics.html",
         handle=handle,
