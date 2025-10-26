@@ -8,7 +8,11 @@ from flask_caching import Cache
 from pandas import DataFrame
 from werkzeug.utils import secure_filename
 
-from analytics.aggregations import agg_user_feed_dataframe, get_user_feed_df
+from analytics.aggregations import (
+    agg_user_feed_dataframe,
+    get_user_feed_df,
+    stacked_agg_user_feed_dataframe,
+)
 from bluesky_client.get_author_feed import get_author_feed
 
 app = Flask(__name__)
@@ -16,7 +20,7 @@ app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
 cache = Cache(app)
 
 # Config
-USER_HANDLE = "pupbiscuit24.bsky.social"
+USER_HANDLE = os.getenv("CLIENT_HANDLE")
 UPLOAD_FOLDER = "./static/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -94,11 +98,15 @@ def analytics():
     avg_likes = agg_user_feed_dataframe(
         feed_df, "average_likes", "like_count", "mean", period
     )
+    stacked_totals = stacked_agg_user_feed_dataframe(feed_df, "sum", period)
+    stacked_averages = stacked_agg_user_feed_dataframe(feed_df, "mean", period)
     return render_template(
         "analytics.html",
         total_likes=total_likes,
         avg_likes=avg_likes,
         total_posts=total_posts,
+        stacked_totals=stacked_totals,
+        stacked_averages=stacked_averages,
     )
 
 

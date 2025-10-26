@@ -17,8 +17,7 @@
     <div class="chart-row">
         <div class="chart-text">
             <h2>Total Posts per Period</h2>
-            <p>This shows the total number of posts you’ve made during each {{ request.args.get('period', 'quarter') }}. 
-            Use this to track how consistently you’re sharing content over time.</p>
+            <p>This shows the total number of posts you’ve made during each period. Use this to track how consistently you’re sharing content over time.</p>
         </div>
         <div class="chart-box">
             <canvas id="totalPostsChart"></canvas>
@@ -44,16 +43,38 @@
             <canvas id="averageLikesChart"></canvas>
         </div>
     </div>
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Total Interactions per Period</h2>
+            <p>This shows the total interactions your posts have received during each period. Use this to see how engagement with your content changes over time and which types of interactions are driving it.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="totalInteractionsStackedChart"></canvas>
+        </div>
+    </div>
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Average Interactions per Period</h2>
+            <p>This shows the average number of interactions your posts receive during each period. Use this to track how engaging your content is over time.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="averageInteractionsStackedChart"></canvas>
+        </div>
+    </div>
 </div>
 
 <script>
     const chartData1 = {{ total_likes | tojson }};
     const chartData2 = {{ avg_likes | tojson }};
     const chartData3 = {{ total_posts | tojson }};
+    const chartData4 = {{ stacked_totals | tojson }};
+    const chartData5 = {{ stacked_averages | tojson }};
     
     const ctx1 = document.getElementById('totalLikesChart').getContext('2d');
     const ctx2 = document.getElementById('averageLikesChart').getContext('2d');
     const ctx3 = document.getElementById('totalPostsChart').getContext('2d');
+    const ctx4 = document.getElementById('totalInteractionsStackedChart').getContext('2d');
+    const ctx5 = document.getElementById('averageInteractionsStackedChart').getContext('2d');
     new Chart(ctx1, {
         type: 'bar',
         data: {
@@ -138,6 +159,60 @@
                 borderWidth: 2
             }]
         },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx4, {
+        type: 'bar',
+        data: chartData4,
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx5, {
+        type: 'bar',
+        data: chartData5,
         options: {
             responsive: true,
             scales: {
