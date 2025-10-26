@@ -88,7 +88,6 @@ def analytics():
     total_likes = agg_user_feed_dataframe(
         feed_df, "total_likes", "like_count", "sum", period
     )
-    print(total_likes)
     total_posts = agg_user_feed_dataframe(
         feed_df, "total_posts", "like_count", "count", period
     )
