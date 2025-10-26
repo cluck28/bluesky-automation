@@ -1,14 +1,22 @@
 import os
+from typing import List
 
+import pandas as pd
 from atproto import Client
 from flask import Flask, redirect, render_template, request, url_for
+from flask_caching import Cache
+from pandas import DataFrame
 from werkzeug.utils import secure_filename
 
+from analytics.aggregations import agg_user_feed_dataframe, get_user_feed_df
 from bluesky_client.get_author_feed import get_author_feed
 
 app = Flask(__name__)
+app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
+cache = Cache(app)
 
 # Config
+USER_HANDLE = "pupbiscuit24.bsky.social"
 UPLOAD_FOLDER = "./static/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
@@ -19,6 +27,21 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@cache.cached(timeout=600, key_prefix="user_feed")
+def get_user_feed() -> List:
+    client = Client()
+    client_username = os.getenv("CLIENT_USERNAME")
+    client_password = os.getenv("CLIENT_PASSWORD")
+    client.login(client_username, client_password)
+    client_did = client.me.did
+    return get_author_feed(client, client_did)
+
+
+@cache.cached(timeout=600, key_prefix="feed_df")
+def get_user_feed_dataframe(user_feed: list, handle: str) -> DataFrame:
+    return get_user_feed_df(user_feed, handle)
 
 
 @app.route("/")
@@ -45,12 +68,7 @@ def upload():
 def gallery():
     media_files = os.listdir(app.config["UPLOAD_FOLDER"])
     media_paths = [os.path.join(app.config["UPLOAD_FOLDER"], f) for f in media_files]
-    client = Client()
-    client_username = os.getenv("CLIENT_USERNAME")
-    client_password = os.getenv("CLIENT_PASSWORD")
-    client.login(client_username, client_password)
-    client_did = client.me.did
-    feed_posts = get_author_feed(client, client_did)
+    feed_posts = get_user_feed()
     external_paths = [thumb.embed.thumbnail for thumb in feed_posts]
     likes = [post.like_count for post in feed_posts]
     return render_template(
@@ -58,6 +76,29 @@ def gallery():
         media_paths=media_paths,
         external_paths=external_paths,
         likes=likes,
+    )
+
+
+@app.route("/analytics", methods=["GET"])
+def analytics():
+    period = request.args.get("period", "month")  # default to month
+
+    feed_posts = get_user_feed()
+    feed_df = get_user_feed_dataframe(feed_posts, USER_HANDLE)
+    total_likes = agg_user_feed_dataframe(
+        feed_df, "total_likes", "like_count", "sum", period
+    )
+    total_posts = agg_user_feed_dataframe(
+        feed_df, "total_posts", "like_count", "count", period
+    )
+    avg_likes = agg_user_feed_dataframe(
+        feed_df, "average_likes", "like_count", "mean", period
+    )
+    return render_template(
+        "analytics.html",
+        total_likes=total_likes,
+        avg_likes=avg_likes,
+        total_posts=total_posts,
     )
 
 

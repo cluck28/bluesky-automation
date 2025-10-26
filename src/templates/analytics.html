@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="analytics-container">
+    <h1>Analytics Dashboard</h1>
+        <!-- Aggregation Selector -->
+        <form id="periodForm" method="GET" action="/analytics" style="margin-bottom: 20px;">
+            <label for="periodSelect">Aggregation Period:</label>
+            <select name="period" id="periodSelect" onchange="document.getElementById('periodForm').submit()">
+                <option value="day" {% if request.args.get('period') == 'day' %}selected{% endif %}>Daily</option>
+                <option value="week" {% if request.args.get('period') == 'week' %}selected{% endif %}>Weekly</option>
+                <option value="month" {% if request.args.get('period') == 'month' or not request.args.get('period') %}selected{% endif %}>Monthly</option>
+                <option value="quarter" {% if request.args.get('period') == 'quarter' %}selected{% endif %}>Quarterly</option>
+                <option value="year" {% if request.args.get('period') == 'year' %}selected{% endif %}>Yearly</option>
+            </select>
+        </form>
+       <!-- Chart + Text Pairs -->
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Total Posts per Period</h2>
+            <p>This shows the total number of posts you’ve made during each {{ request.args.get('period', 'quarter') }}. 
+            Use this to track how consistently you’re sharing content over time.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="totalPostsChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Total Likes per Period</h2>
+            <p>This chart displays the total likes your posts received for each period. It’s a simple pulse check on engagement growth.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="totalLikesChart"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Average Likes per Period</h2>
+            <p>This shows your average likes per post. A higher average means your content is performing consistently well—even if you post less frequently.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="averageLikesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chartData1 = {{ total_likes | tojson }};
+    const chartData2 = {{ avg_likes | tojson }};
+    const chartData3 = {{ total_posts | tojson }};
+    
+    const ctx1 = document.getElementById('totalLikesChart').getContext('2d');
+    const ctx2 = document.getElementById('averageLikesChart').getContext('2d');
+    const ctx3 = document.getElementById('totalPostsChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: chartData1.labels,
+            datasets: [{
+                label: 'Total Likes',
+                data: chartData1.values,
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: chartData2.labels,
+            datasets: [{
+                label: 'Average Likes',
+                data: chartData2.values,
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx3, {
+        type: 'bar',
+        data: {
+            labels: chartData3.labels,
+            datasets: [{
+                label: 'Total Posts',
+                data: chartData3.values,
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
