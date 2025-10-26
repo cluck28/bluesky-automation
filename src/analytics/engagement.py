@@ -25,6 +25,26 @@ def get_likes_df(likes: list, follows: list, followers: list) -> DataFrame:
     ]
 
 
+def get_reposts_df(reposts: list, follows: list, followers: list) -> DataFrame:
+    reposts_df = pd.DataFrame([repost.dict() for repost in reposts])
+    follows_df = pd.DataFrame([follow.dict() for follow in follows])
+    followers_df = pd.DataFrame([follower.dict() for follower in followers])
+    merged = reposts_df.merge(
+        follows_df[["handle", "follow_index"]], on="handle", how="left"
+    )
+    merged["following"] = merged["follow_index"].notnull()
+    merged = merged[
+        ["post_uri", "post_indexed_at", "indexed_at", "handle", "following"]
+    ]
+    merged = merged.merge(
+        followers_df[["handle", "follow_index"]], on="handle", how="left"
+    )
+    merged["follower"] = merged["follow_index"].notnull()
+    return merged[
+        ["post_uri", "post_indexed_at", "indexed_at", "handle", "following", "follower"]
+    ]
+
+
 def get_engagement_score(likes_df: DataFrame, followers: int) -> int:
     likes_df["indexed_at"] = pd.to_datetime(likes_df["indexed_at"], utc=True)
     cutoff = datetime.now(pytz.UTC) - timedelta(days=90)
