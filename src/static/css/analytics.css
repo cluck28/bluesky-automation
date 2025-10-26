@@ -2,7 +2,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px;
+    padding: 40px 20px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 h1 {
@@ -12,33 +14,85 @@ h1 {
 }
 
 .period-form {
-    margin-bottom: 30px;
+    margin-bottom: 40px;
     text-align: center;
 }
 
-.chart-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 30px;
+.chart-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
     width: 100%;
-    max-width: 1600px;
-    justify-items: center;
+    max-width: 1200px;
+    margin-bottom: 60px;
+    flex-wrap: wrap; /* allows smoother wrapping on intermediate widths */
+    padding: 0 20px; /* added horizontal padding */
+    border-radius: 15px; /* rounds the corners */
 }
 
-.chart-item {
-    width: 100%;
-    max-width: 700px;
-    text-align: center;
+/* Alternating backgrounds */
+.chart-row:nth-of-type(odd) {
+    background-color: #f0f0f0;
 }
 
-.chart-item h2 {
+.chart-row:nth-of-type(even) {
+    background-color: #f0f0f0;
+}
+
+.chart-text {
+    flex: 1 1 400px;
+    color: #060606;
+    font-size: 1rem;
+    line-height: 1.6;
+    min-width: 280px;
+}
+
+.chart-text h2 {
     margin-bottom: 10px;
+    color: #303030;
 }
 
 .chart-box {
-    width: 100%;
+    flex: 1 1 500px;
     background: #1e1e1e;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+    min-width: 280px;
+}
+
+/* Medium screens: stack text and chart neatly with spacing */
+@media (max-width: 1024px) {
+    .chart-row {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 25px;
+    }
+
+    .chart-text, .chart-box {
+        width: 100%;
+        max-width: 700px;
+    }
+}
+
+/* Small screens: comfortable vertical spacing and readable text */
+@media (max-width: 600px) {
+    .analytics-container {
+        padding: 20px 10px;
+    }
+
+    .chart-text {
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .chart-row {
+        margin-bottom: 40px;
+    }
+
+    .chart-box {
+        padding: 15px;
+    }
 }
