@@ -134,9 +134,13 @@ def analytics():
     feed_df = get_user_feed_dataframe(feed_posts, USER_HANDLE)
     user_profile = get_user_profile()
     handle = user_profile.handle
-    followers = user_profile.followers_count
-    following = user_profile.follows_count
-    engagement_rate = get_engagement_score()
+    followers_count = user_profile.followers_count
+    following_count = user_profile.follows_count
+    likes_data = get_user_post_likes(feed_posts)
+    followers = get_user_followers()
+    follows = get_user_follows()
+    likes_df = get_likes_dataframe(likes_data, follows, followers)
+    engagement_rate = get_engagement_score(likes_df, followers_count)
     total_likes = agg_user_feed_dataframe(
         feed_df, "total_likes", "like_count", "sum", period
     )
@@ -167,8 +171,8 @@ def analytics():
     return render_template(
         "analytics.html",
         handle=handle,
-        followers=followers,
-        following=following,
+        followers=followers_count,
+        following=following_count,
         posts=posts,
         engagement_rate=engagement_rate,
         average_likes=average_likes,
@@ -194,6 +198,7 @@ def engagement():
     followers = get_user_followers()
     follows = get_user_follows()
     likes_df = get_likes_dataframe(likes_data, follows, followers)
+    print(likes_df)
     return render_template("engagement.html")
 
 

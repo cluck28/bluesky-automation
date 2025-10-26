@@ -27,7 +27,7 @@ def get_post_likes(
                     post_uri=item.uri,
                     post_indexed_at=item.indexed_at,
                     indexed_at=like.indexed_at,
-                    actor=like.actor.handle,
+                    handle=like.actor.handle,
                 )
                 cleaned_data.append(parsed_like)
             cursor = data.cursor
