@@ -16,18 +16,22 @@ def get_user_feed_df(user_feed: list, user_handle: str) -> DataFrame:
         bookmarks = post.bookmark_count
         handle = post.author.handle
         if handle == user_handle:
-            data.append({
-                "indexed_at": ts,
-                "like_count": likes,
-                "reply_count": replies,
-                "quote_count": quotes,
-                "repost_count": reposts,
-                "bookmark_count": bookmarks,
-            })
+            data.append(
+                {
+                    "indexed_at": ts,
+                    "like_count": likes,
+                    "reply_count": replies,
+                    "quote_count": quotes,
+                    "repost_count": reposts,
+                    "bookmark_count": bookmarks,
+                }
+            )
     return pd.DataFrame(data)
 
 
-def agg_user_feed_dataframe(feed_df: DataFrame, agg_column: str, column: str, agg: str, period: str) -> Dict:
+def agg_user_feed_dataframe(
+    feed_df: DataFrame, agg_column: str, column: str, agg: str, period: str
+) -> Dict:
     df = feed_df
     df["indexed_at"] = pd.to_datetime(df["indexed_at"])
     if period == "day":
@@ -48,4 +52,7 @@ def agg_user_feed_dataframe(feed_df: DataFrame, agg_column: str, column: str, ag
     )
     agg_df["cohort"] = agg_df["cohort"].astype(str)
     agg_df[agg_column] = agg_df["agg_column"]
-    return {"labels": agg_df["cohort"].to_list(), "values": agg_df[agg_column].to_list()}
+    return {
+        "labels": agg_df["cohort"].to_list(),
+        "values": agg_df[agg_column].to_list(),
+    }

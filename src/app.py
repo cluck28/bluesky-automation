@@ -1,14 +1,14 @@
 import os
-import pandas as pd
-from pandas import DataFrame
-
 from typing import List
+
+import pandas as pd
 from atproto import Client
 from flask import Flask, redirect, render_template, request, url_for
 from flask_caching import Cache
+from pandas import DataFrame
 from werkzeug.utils import secure_filename
 
-from analytics.aggregations import get_user_feed_df, agg_user_feed_dataframe
+from analytics.aggregations import agg_user_feed_dataframe, get_user_feed_df
 from bluesky_client.get_author_feed import get_author_feed
 
 app = Flask(__name__)
@@ -85,10 +85,16 @@ def analytics():
 
     feed_posts = get_user_feed()
     feed_df = get_user_feed_dataframe(feed_posts, USER_HANDLE)
-    total_likes = agg_user_feed_dataframe(feed_df, "total_likes", "like_count", "sum", period)
+    total_likes = agg_user_feed_dataframe(
+        feed_df, "total_likes", "like_count", "sum", period
+    )
     print(total_likes)
-    total_posts = agg_user_feed_dataframe(feed_df, "total_posts", "like_count", "count", period)
-    avg_likes = agg_user_feed_dataframe(feed_df, "average_likes", "like_count", "mean", period)
+    total_posts = agg_user_feed_dataframe(
+        feed_df, "total_posts", "like_count", "count", period
+    )
+    avg_likes = agg_user_feed_dataframe(
+        feed_df, "average_likes", "like_count", "mean", period
+    )
     return render_template(
         "analytics.html",
         total_likes=total_likes,
