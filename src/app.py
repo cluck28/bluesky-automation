@@ -40,13 +40,18 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@cache.cached(timeout=600, key_prefix="user_feed")
-def get_user_feed() -> List:
+def login_client() -> tuple[Client, str]:
     client = Client()
     client_username = os.getenv("CLIENT_USERNAME")
     client_password = os.getenv("CLIENT_PASSWORD")
     client.login(client_username, client_password)
     client_did = client.me.did
+    return client, client_did
+
+
+@cache.cached(timeout=600, key_prefix="user_feed")
+def get_user_feed() -> List:
+    client, client_did = login_client()
     return get_author_feed(client, client_did)
 
 
@@ -57,31 +62,19 @@ def get_user_feed_dataframe(user_feed: list, handle: str) -> DataFrame:
 
 @cache.cached(timeout=600, key_prefix="user_profile")
 def get_user_profile() -> Profile:
-    client = Client()
-    client_username = os.getenv("CLIENT_USERNAME")
-    client_password = os.getenv("CLIENT_PASSWORD")
-    client.login(client_username, client_password)
-    client_did = client.me.did
+    client, client_did = login_client()
     return get_profile(client, client_did)
 
 
 @cache.cached(timeout=600, key_prefix="user_follows")
 def get_user_follows() -> Follower:
-    client = Client()
-    client_username = os.getenv("CLIENT_USERNAME")
-    client_password = os.getenv("CLIENT_PASSWORD")
-    client.login(client_username, client_password)
-    client_did = client.me.did
+    client, client_did = login_client()
     return get_follows(client, client_did)
 
 
 @cache.cached(timeout=600, key_prefix="user_followers")
 def get_user_followers() -> Follower:
-    client = Client()
-    client_username = os.getenv("CLIENT_USERNAME")
-    client_password = os.getenv("CLIENT_PASSWORD")
-    client.login(client_username, client_password)
-    client_did = client.me.did
+    client, client_did = login_client()
     return get_followers(client, client_did)
 
 
