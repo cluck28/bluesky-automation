@@ -146,16 +146,24 @@ def embed_type_agg_user_feed_dataframe(
     agg_df["cohort"] = agg_df["cohort"].astype(str)
     agg_df[agg_column] = agg_df["agg_column"]
     # We need to infill values where we are missing date <> embed_type combos
-    all_periods = agg_df['cohort'].unique()
-    all_types = agg_df['embed_type'].unique()
-    full_index = pd.MultiIndex.from_product([all_periods, all_types], names=['cohort', 'embed_type'])
-    df_full = agg_df.set_index(['cohort', 'embed_type']).reindex(full_index, fill_value=0).reset_index()
+    all_periods = agg_df["cohort"].unique()
+    all_types = agg_df["embed_type"].unique()
+    full_index = pd.MultiIndex.from_product(
+        [all_periods, all_types], names=["cohort", "embed_type"]
+    )
+    df_full = (
+        agg_df.set_index(["cohort", "embed_type"])
+        .reindex(full_index, fill_value=0)
+        .reset_index()
+    )
     return {
         "labels": df_full[df_full["embed_type"] == "images"]["cohort"].to_list(),
         "datasets": [
             {
                 "label": "Images",
-                "data": df_full[df_full["embed_type"] == "images"][agg_column].to_list(),
+                "data": df_full[df_full["embed_type"] == "images"][
+                    agg_column
+                ].to_list(),
                 "backgroundColor": "rgba(255, 99, 132, 0.6)",
             },
             {
@@ -168,5 +176,5 @@ def embed_type_agg_user_feed_dataframe(
                 "data": df_full[df_full["embed_type"] == "other"][agg_column].to_list(),
                 "backgroundColor": "rgba(255, 206, 86, 0.6)",
             },
-        ]
+        ],
     }

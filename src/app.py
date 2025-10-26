@@ -10,16 +10,16 @@ from werkzeug.utils import secure_filename
 
 from analytics.aggregations import (
     agg_user_feed_dataframe,
+    embed_type_agg_user_feed_dataframe,
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
-    embed_type_agg_user_feed_dataframe,
 )
+from analytics.engagement import get_engagement_score
 from analytics.top_posts import (
     get_most_bookmarked_post,
     get_most_liked_post,
     get_most_reposted_post,
 )
-from analytics.engagement import get_engagement_score
 from bluesky_client.get_author_feed import get_author_feed
 from bluesky_client.get_profile import get_followers, get_follows, get_profile
 from bluesky_client.schemas.profile import Follower, Profile
@@ -149,7 +149,9 @@ def analytics():
     top_reposted_post_img, top_reposted_post_count = get_most_reposted_post(
         feed_posts, USER_HANDLE
     )
-    avg_likes_by_type = embed_type_agg_user_feed_dataframe(feed_df, "average_likes", "like_count", "mean", period)
+    avg_likes_by_type = embed_type_agg_user_feed_dataframe(
+        feed_df, "average_likes", "like_count", "mean", period
+    )
     return render_template(
         "analytics.html",
         handle=handle,
@@ -176,6 +178,7 @@ def analytics():
 @app.route("/engagement", methods=["GET"])
 def engagement():
     return render_template("engagement.html")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
