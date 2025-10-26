@@ -83,8 +83,10 @@ def stacked_agg_user_feed_dataframe(feed_df: DataFrame, agg: str, period: str) -
     # Aggregate — for example, sum of values per month
     if agg == "sum":
         agg_df = df.groupby("cohort", as_index=False)[data_types].sum()
-    else:
+    elif agg == "mean":
         agg_df = df.groupby("cohort", as_index=False)[data_types].mean()
+    else:
+        agg_df = df.groupby("cohort", as_index=False)[data_types].sum()
     agg_df["cohort"] = agg_df["cohort"].astype(str)
     return {
         "labels": agg_df["cohort"].to_list(),
