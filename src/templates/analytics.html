@@ -1,5 +1,63 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="profile-header">
+    <div class="profile-info">
+        <h1>{{ handle }}</h1>
+        <p class="tagline">Keeping it smooth and engaging 💫</p>
+        <div class="follow-stats">
+            <div class="stat">
+                <span class="stat-number">{{ followers }}</span>
+                <span class="stat-label">Followers</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">{{ following }}</span>
+                <span class="stat-label">Following</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">{{ posts }}</span>
+                <span class="stat-label">Posts</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">{{ engagement_rate }}%</span>
+                <span class="stat-label">Engagement</span>
+            </div>
+        </div>
+        <br></br>
+        <p class="fun-stats">💌 That's {{ average_likes }} likes per post — your audience loves you 😏</p>
+
+        <!-- New section for top posts -->
+        <p class="fun-stats">Here are your top performing posts</p>
+        <div class="top-posts">
+            <div class="top-post">
+                <div class="top-post-container">
+                    <img src="{{ top_liked_post_img }}" alt="Most Liked Post">
+                    <div class="top-post-overlay">
+                        <span>{{ top_likes_count }}</span>
+                    </div>
+                </div>
+                <span class="top-post-label">Most Liked</span>
+            </div>
+            <div class="top-post">
+                <div class="top-post-container">
+                    <img src="{{ top_bookmarked_post_img }}" alt="Most Bookmarked Post">
+                    <div class="top-post-overlay">
+                        <span>{{ top_bookmarked_count }}</span>
+                    </div>
+                </div>
+                <span class="top-post-label">Most Bookmarked</span>
+            </div>
+            <div class="top-post">
+                <div class="top-post-container">
+                    <img src="{{ top_reposted_post_img }}" alt="Most Reposted Post">
+                    <div class="top-post-overlay">
+                        <span>{{ top_reposted_count }}</span>
+                    </div>
+                </div>
+                <span class="top-post-label">Most Reposted</span>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="analytics-container">
     <h1>Analytics Dashboard</h1>
         <!-- Aggregation Selector -->

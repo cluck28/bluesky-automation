@@ -13,6 +13,7 @@ from analytics.aggregations import (
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
 )
+from analytics.top_posts import get_most_liked_post, get_most_reposted_post, get_most_bookmarked_post
 from bluesky_client.get_author_feed import get_author_feed
 from bluesky_client.get_profile import get_profile, get_follows, get_followers
 from bluesky_client.schemas.profile import Profile, Follower
@@ -122,24 +123,42 @@ def analytics():
     feed_posts = get_user_feed()
     feed_df = get_user_feed_dataframe(feed_posts, USER_HANDLE)
     user_profile = get_user_profile()
-    user_follows = get_user_follows()
-    user_followers = get_user_followers()
-    #print(user_profile.model_dump())
-    #print([user.model_dump() for user in user_follows])
-    print([user.model_dump() for user in user_followers])
+    handle = user_profile.handle
+    followers = user_profile.followers_count
+    following = user_profile.follows_count
+    engagement_rate = 100
     total_likes = agg_user_feed_dataframe(
         feed_df, "total_likes", "like_count", "sum", period
     )
+    likes = sum(total_likes["values"])
     total_posts = agg_user_feed_dataframe(
         feed_df, "total_posts", "like_count", "count", period
     )
+    posts = sum(total_posts["values"])
     avg_likes = agg_user_feed_dataframe(
         feed_df, "average_likes", "like_count", "mean", period
     )
+    average_likes = round(likes / posts, 0)
+    print(average_likes)
     stacked_totals = stacked_agg_user_feed_dataframe(feed_df, "sum", period)
     stacked_averages = stacked_agg_user_feed_dataframe(feed_df, "mean", period)
+    top_liked_post_img, top_liked_post_count = get_most_liked_post(feed_posts, USER_HANDLE)
+    top_bookmarked_post_img, top_bookmarked_post_count = get_most_bookmarked_post(feed_posts, USER_HANDLE)
+    top_reposted_post_img, top_reposted_post_count = get_most_reposted_post(feed_posts, USER_HANDLE)
     return render_template(
         "analytics.html",
+        handle=handle,
+        followers=followers,
+        following=following,
+        posts=posts,
+        engagement_rate=engagement_rate,
+        average_likes=average_likes,
+        top_liked_post_img=top_liked_post_img,
+        top_likes_count=top_liked_post_count,
+        top_bookmarked_post_img=top_bookmarked_post_img,
+        top_bookmarked_count=top_bookmarked_post_count,
+        top_reposted_post_img=top_reposted_post_img,
+        top_reposted_count=top_reposted_post_count,
         total_likes=total_likes,
         avg_likes=avg_likes,
         total_posts=total_posts,
