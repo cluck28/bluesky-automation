@@ -67,9 +67,9 @@ def get_author_feed(client: Client, client_did: str, limit: int = 30) -> List[Po
         for item in data.feed:
             # reply = item.reply
             # reason = item.reason
-
             post = item.post
             parsed_post = Post(
+                uri=post.uri,
                 author=parse_author(post.author),
                 indexed_at=post.indexed_at,
                 record=parse_record(post.record),

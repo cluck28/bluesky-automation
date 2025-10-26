@@ -14,7 +14,7 @@ from analytics.aggregations import (
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
 )
-from analytics.engagement import get_engagement_score
+from analytics.engagement import get_engagement_score, get_likes_df
 from analytics.top_posts import (
     get_most_bookmarked_post,
     get_most_liked_post,
@@ -22,6 +22,7 @@ from analytics.top_posts import (
 )
 from bluesky_client.get_author_feed import get_author_feed
 from bluesky_client.get_profile import get_followers, get_follows, get_profile
+from bluesky_client.get_post_likes import get_post_likes
 from bluesky_client.schemas.profile import Follower, Profile
 
 app = Flask(__name__)
@@ -69,15 +70,25 @@ def get_user_profile() -> Profile:
 
 
 @cache.cached(timeout=600, key_prefix="user_follows")
-def get_user_follows() -> Follower:
+def get_user_follows() -> list:
     client, client_did = login_client()
     return get_follows(client, client_did)
 
 
 @cache.cached(timeout=600, key_prefix="user_followers")
-def get_user_followers() -> Follower:
+def get_user_followers() -> list:
     client, client_did = login_client()
     return get_followers(client, client_did)
+
+@cache.cached(timeout=3600, key_prefix="post_likes")
+def get_user_post_likes(user_feed: list) -> list:
+    client, _ = login_client()
+    return get_post_likes(client, user_feed, USER_HANDLE)
+
+
+@cache.cached(timeout=3600, key_prefix="likes_df")
+def get_likes_dataframe(likes: list, follows: list, followers: list) -> DataFrame:
+    return get_likes_df(likes, follows, followers)
 
 
 @app.route("/")
@@ -177,6 +188,11 @@ def analytics():
 
 @app.route("/engagement", methods=["GET"])
 def engagement():
+    feed_posts = get_user_feed()
+    likes_data = get_user_post_likes(feed_posts)
+    followers = get_user_followers()
+    follows = get_user_follows()
+    likes_df = get_likes_dataframe(likes_data, follows, followers)
     return render_template("engagement.html")
 
 

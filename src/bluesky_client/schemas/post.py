@@ -19,6 +19,7 @@ class Embed(BaseModel):
 
 
 class Post(BaseModel):
+    uri: str
     author: Author
     indexed_at: datetime
     record: BskyRecord
