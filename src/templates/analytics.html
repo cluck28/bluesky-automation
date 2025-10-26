@@ -44,16 +44,38 @@
             <canvas id="averageLikesChart"></canvas>
         </div>
     </div>
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Total Interactions per Period</h2>
+            <p>This shows your total interactions per period. This allows you to see the different ways people are interacting with your content.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="totalInteractionsStackedChart"></canvas>
+        </div>
+    </div>
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Average Interactions per Period</h2>
+            <p>This shows your average interactions per post. A higher average means your posts are performing well across different interaction types.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="averageInteractionsStackedChart"></canvas>
+        </div>
+    </div>
 </div>
 
 <script>
     const chartData1 = {{ total_likes | tojson }};
     const chartData2 = {{ avg_likes | tojson }};
     const chartData3 = {{ total_posts | tojson }};
+    const chartData4 = {{ stacked_totals | tojson }};
+    const chartData5 = {{ stacked_averages | tojson }};
     
     const ctx1 = document.getElementById('totalLikesChart').getContext('2d');
     const ctx2 = document.getElementById('averageLikesChart').getContext('2d');
     const ctx3 = document.getElementById('totalPostsChart').getContext('2d');
+    const ctx4 = document.getElementById('totalInteractionsStackedChart').getContext('2d');
+    const ctx5 = document.getElementById('averageInteractionsStackedChart').getContext('2d');
     new Chart(ctx1, {
         type: 'bar',
         data: {
@@ -138,6 +160,60 @@
                 borderWidth: 2
             }]
         },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx4, {
+        type: 'bar',
+        data: chartData4,
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx5, {
+        type: 'bar',
+        data: chartData5,
         options: {
             responsive: true,
             scales: {
