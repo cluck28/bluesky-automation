@@ -8,8 +8,11 @@ from flask_caching import Cache
 from pandas import DataFrame
 from werkzeug.utils import secure_filename
 
-from analytics.aggregations import (agg_user_feed_dataframe, get_user_feed_df,
-                                    stacked_agg_user_feed_dataframe)
+from analytics.aggregations import (
+    agg_user_feed_dataframe,
+    get_user_feed_df,
+    stacked_agg_user_feed_dataframe,
+)
 from bluesky_client.get_author_feed import get_author_feed
 
 app = Flask(__name__)
