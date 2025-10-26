@@ -12,6 +12,7 @@ from analytics.aggregations import (
     agg_user_feed_dataframe,
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
+    embed_type_agg_user_feed_dataframe,
 )
 from analytics.top_posts import (
     get_most_bookmarked_post,
@@ -116,7 +117,6 @@ def gallery():
 @app.route("/analytics", methods=["GET"])
 def analytics():
     period = request.args.get("period", "month")  # default to month
-
     feed_posts = get_user_feed()
     feed_df = get_user_feed_dataframe(feed_posts, USER_HANDLE)
     user_profile = get_user_profile()
@@ -148,6 +148,7 @@ def analytics():
     top_reposted_post_img, top_reposted_post_count = get_most_reposted_post(
         feed_posts, USER_HANDLE
     )
+    avg_likes_by_type = embed_type_agg_user_feed_dataframe(feed_df, "average_likes", "like_count", "mean", period)
     return render_template(
         "analytics.html",
         handle=handle,
@@ -167,6 +168,7 @@ def analytics():
         total_posts=total_posts,
         stacked_totals=stacked_totals,
         stacked_averages=stacked_averages,
+        average_likes_by_type=avg_likes_by_type,
     )
 
 
