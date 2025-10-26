@@ -11,11 +11,34 @@ h1 {
     text-align: center;
 }
 
+.period-form {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    width: 100%;
+    max-width: 1600px;
+    justify-items: center;
+}
+
+.chart-item {
+    width: 100%;
+    max-width: 700px;
+    text-align: center;
+}
+
+.chart-item h2 {
+    margin-bottom: 10px;
+}
+
 .chart-box {
-    width: 80%;
-    max-width: 800px;
+    width: 100%;
     background: #1e1e1e;
     padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
 }

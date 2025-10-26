@@ -79,14 +79,16 @@ def gallery():
     )
 
 
-@app.route("/analytics")
+@app.route("/analytics", methods=["GET"])
 def analytics():
+    period = request.args.get("period", "month")  # default to month
+
     feed_posts = get_user_feed()
     feed_df = get_user_feed_dataframe(feed_posts, USER_HANDLE)
-    total_likes = agg_user_feed_dataframe(feed_df, "total_likes", "like_count", "sum", "month")
+    total_likes = agg_user_feed_dataframe(feed_df, "total_likes", "like_count", "sum", period)
     print(total_likes)
-    total_posts = agg_user_feed_dataframe(feed_df, "total_posts", "like_count", "count", "month")
-    avg_likes = agg_user_feed_dataframe(feed_df, "average_likes", "like_count", "mean", "month")
+    total_posts = agg_user_feed_dataframe(feed_df, "total_posts", "like_count", "count", period)
+    avg_likes = agg_user_feed_dataframe(feed_df, "average_likes", "like_count", "mean", period)
     return render_template(
         "analytics.html",
         total_likes=total_likes,

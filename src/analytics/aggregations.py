@@ -30,11 +30,22 @@ def get_user_feed_df(user_feed: list, user_handle: str) -> DataFrame:
 def agg_user_feed_dataframe(feed_df: DataFrame, agg_column: str, column: str, agg: str, period: str) -> Dict:
     df = feed_df
     df["indexed_at"] = pd.to_datetime(df["indexed_at"])
-    df["month"] = df["indexed_at"].dt.to_period("M")
+    if period == "day":
+        df["cohort"] = df["indexed_at"].dt.to_period("D")
+    elif period == "week":
+        df["cohort"] = df["indexed_at"].dt.to_period("W")
+    elif period == "month":
+        df["cohort"] = df["indexed_at"].dt.to_period("M")
+    elif period == "quarter":
+        df["cohort"] = df["indexed_at"].dt.to_period("Q")
+    elif period == "year":
+        df["cohort"] = df["indexed_at"].dt.to_period("Y")
+    else:
+        df["cohort"] = df["indexed_at"].dt.to_period("M")
     # Aggregate — for example, sum of values per month
-    agg_df = df.groupby("month", as_index=False).agg(
+    agg_df = df.groupby("cohort", as_index=False).agg(
         agg_column=(column, agg),
     )
-    agg_df["month"] = agg_df["month"].astype(str)
+    agg_df["cohort"] = agg_df["cohort"].astype(str)
     agg_df[agg_column] = agg_df["agg_column"]
-    return {"labels": agg_df["month"].to_list(), "values": agg_df[agg_column].to_list()}
+    return {"labels": agg_df["cohort"].to_list(), "values": agg_df[agg_column].to_list()}
