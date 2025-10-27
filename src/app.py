@@ -220,7 +220,8 @@ def engagement():
     reposts_df = get_reposts_dataframe(reposts_data, follows, followers)
     engagement_df = get_engagement_dataframe(feed_posts, likes_df, reposts_df)
     engagement_over_time = agg_engagement_rate(engagement_df)
-    return render_template("engagement.html", engagement_over_time=engagement_over_time)
+    html_table = engagement_df.to_html(classes='table table-striped table-bordered', index=False)
+    return render_template("engagement.html", engagement_over_time=engagement_over_time, table=html_table)
 
 
 if __name__ == "__main__":
