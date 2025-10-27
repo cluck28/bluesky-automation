@@ -23,7 +23,7 @@ def get_likes_df(likes: list, follows: list, followers: list) -> DataFrame:
     merged["follower"] = merged["follow_index"].notnull()
     merged["type"] = "like"
     return merged[
-        ["post_uri", "post_indexed_at", "indexed_at", "handle", "following", "follower"]
+        ["post_uri", "post_indexed_at", "indexed_at", "handle", "following", "follower", "type"]
     ]
 
 
@@ -44,7 +44,7 @@ def get_reposts_df(reposts: list, follows: list, followers: list) -> DataFrame:
     merged["follower"] = merged["follow_index"].notnull()
     merged["type"] = "repost"
     return merged[
-        ["post_uri", "post_indexed_at", "indexed_at", "handle", "following", "follower"]
+        ["post_uri", "post_indexed_at", "indexed_at", "handle", "following", "follower", "type"]
     ]
 
 

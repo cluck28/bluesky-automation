@@ -180,8 +180,8 @@ def embed_type_agg_user_feed_dataframe(
     }
 
 
-def agg_engagement_rate(engagement_df: DataFrame) -> Dict:
+def agg_engagement_rate(engagement_df: DataFrame) -> (Dict, DataFrame):
     return {
         "labels": [],
         "values": []
-    }
+    }, engagement_df
