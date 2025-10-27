@@ -178,3 +178,25 @@ def embed_type_agg_user_feed_dataframe(
             },
         ],
     }
+
+
+def agg_engagement_rate(engagement_df: DataFrame) -> Dict:
+    engagement_df["date_day"] = engagement_df["indexed_at"].dt.date
+    engagement_df["post"] = (engagement_df["type"] == "post").astype(int)
+    engagement_df["like"] = (engagement_df["type"] == "like").astype(int)
+    engagement_df["repost"] = (engagement_df["type"] == "repost").astype(int)
+    grouped_df = engagement_df.groupby("date_day", as_index=False)[
+        ["post", "like", "repost"]
+    ].sum()
+    grouped_df = grouped_df.sort_values("date_day")
+    grouped_df = grouped_df.set_index("date_day")
+    grouped_df["post_past_30"] = grouped_df["post"].shift(1).rolling(window=30).sum()
+    grouped_df["like_past_30"] = grouped_df["like"].shift(1).rolling(window=30).sum()
+    grouped_df["repost_past_30"] = (
+        grouped_df["repost"].shift(1).rolling(window=30).sum()
+    )
+    grouped_df = grouped_df.reset_index()
+    return {
+        "labels": grouped_df["date_day"].to_list(),
+        "values": grouped_df["like_past_30"].to_list(),
+    }
