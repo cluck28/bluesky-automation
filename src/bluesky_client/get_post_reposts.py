@@ -1,8 +1,8 @@
 import time
 from typing import List
-from pydantic import ValidationError
 
 from atproto import Client
+from pydantic import ValidationError
 
 from bluesky_client.schemas.repost import Repost
 

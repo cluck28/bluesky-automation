@@ -9,13 +9,18 @@ from pandas import DataFrame
 from werkzeug.utils import secure_filename
 
 from analytics.aggregations import (
+    agg_engagement_rate,
     agg_user_feed_dataframe,
     embed_type_agg_user_feed_dataframe,
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
-    agg_engagement_rate,
 )
-from analytics.engagement import get_engagement_score, get_likes_df, get_reposts_df, get_engagement_df
+from analytics.engagement import (
+    get_engagement_df,
+    get_engagement_score,
+    get_likes_df,
+    get_reposts_df,
+)
 from analytics.top_posts import (
     get_most_bookmarked_post,
     get_most_liked_post,
@@ -106,7 +111,9 @@ def get_reposts_dataframe(likes: list, follows: list, followers: list) -> DataFr
 
 
 @cache.cached(timeout=3600, key_prefix="engagement_df")
-def get_engagement_dataframe(feed_posts: dict, likes_df: DataFrame, reposts_df: DataFrame) -> DataFrame:
+def get_engagement_dataframe(
+    feed_posts: dict, likes_df: DataFrame, reposts_df: DataFrame
+) -> DataFrame:
     return get_engagement_df(feed_posts, likes_df, reposts_df, USER_HANDLE)
 
 
@@ -220,8 +227,12 @@ def engagement():
     reposts_df = get_reposts_dataframe(reposts_data, follows, followers)
     engagement_df = get_engagement_dataframe(feed_posts, likes_df, reposts_df)
     engagement_over_time, testing_df = agg_engagement_rate(engagement_df)
-    html_table = testing_df.to_html(classes='table table-striped table-bordered', index=False)
-    return render_template("engagement.html", engagement_over_time=engagement_over_time, table=html_table)
+    html_table = testing_df.to_html(
+        classes="table table-striped table-bordered", index=False
+    )
+    return render_template(
+        "engagement.html", engagement_over_time=engagement_over_time, table=html_table
+    )
 
 
 if __name__ == "__main__":
