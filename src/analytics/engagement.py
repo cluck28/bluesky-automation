@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import pytz
 from pandas import DataFrame
+from typing import Dict
 
 
 def get_likes_df(likes: list, follows: list, followers: list) -> DataFrame:
@@ -52,3 +53,7 @@ def get_engagement_score(likes_df: DataFrame, followers: int) -> int:
     return round(
         (filtered_df[filtered_df["follower"]]["handle"].nunique() / followers) * 100, 0
     )
+
+
+def get_engagement_df(feed_posts: Dict, likes_df: DataFrame, reposts_df: DataFrame) -> DataFrame:
+    return pd.concat([likes_df, reposts_df], ignore_index=True)

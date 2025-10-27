@@ -1,3 +1,69 @@
 {% extends "base.html" %}
 {% block content %}
+<div class="engagement-container">
+    <h1>Engagement Dashboard</h1>
+        <!-- Aggregation Selector -->
+        <form id="periodForm" method="GET" action="/engagement" style="margin-bottom: 20px;">
+            <label for="periodSelect">Aggregation Period:</label>
+            <select name="period" id="periodSelect" onchange="document.getElementById('periodForm').submit()">
+                <option value="day" {% if request.args.get('period') == 'day' %}selected{% endif %}>Daily</option>
+                <option value="week" {% if request.args.get('period') == 'week' %}selected{% endif %}>Weekly</option>
+                <option value="month" {% if request.args.get('period') == 'month' or not request.args.get('period') %}selected{% endif %}>Monthly</option>
+                <option value="quarter" {% if request.args.get('period') == 'quarter' %}selected{% endif %}>Quarterly</option>
+                <option value="year" {% if request.args.get('period') == 'year' %}selected{% endif %}>Yearly</option>
+            </select>
+        </form>
+       <!-- Chart + Text Pairs -->
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Engagement Rate Over Time</h2>
+            <p>Engagement over time.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="totalPostsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chartData1 = {{ engagement_over_time | tojson }};
+    const ctx1 = document.getElementById('engagementOverTime').getContext('2d');
+
+    new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: chartData1.labels,
+            datasets: [{
+                label: 'Engagement Rate',
+                data: chartData1.values,
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

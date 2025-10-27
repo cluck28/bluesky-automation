@@ -13,8 +13,9 @@ from analytics.aggregations import (
     embed_type_agg_user_feed_dataframe,
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
+    agg_engagement_rate,
 )
-from analytics.engagement import get_engagement_score, get_likes_df, get_reposts_df
+from analytics.engagement import get_engagement_score, get_likes_df, get_reposts_df, get_engagement_df
 from analytics.top_posts import (
     get_most_bookmarked_post,
     get_most_liked_post,
@@ -24,7 +25,7 @@ from bluesky_client.get_author_feed import get_author_feed
 from bluesky_client.get_post_likes import get_post_likes
 from bluesky_client.get_post_reposts import get_post_reposts
 from bluesky_client.get_profile import get_followers, get_follows, get_profile
-from bluesky_client.schemas.profile import Follower, Profile
+from bluesky_client.schemas.profile import Profile
 
 app = Flask(__name__)
 app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
@@ -102,6 +103,11 @@ def get_user_post_reposts(user_feed: list) -> list:
 @cache.cached(timeout=3600, key_prefix="reposts_df")
 def get_reposts_dataframe(likes: list, follows: list, followers: list) -> DataFrame:
     return get_reposts_df(likes, follows, followers)
+
+
+@cache.cached(timeout=3600, key_prefix="engagement_df")
+def get_engagement_dataframe(feed_posts: dict, likes_df: DataFrame, reposts_df: DataFrame) -> DataFrame:
+    return get_engagement_df(feed_posts, likes_df, reposts_df)
 
 
 @app.route("/")
@@ -212,7 +218,9 @@ def engagement():
     follows = get_user_follows()
     likes_df = get_likes_dataframe(likes_data, follows, followers)
     reposts_df = get_reposts_dataframe(reposts_data, follows, followers)
-    return render_template("engagement.html")
+    engagement_df = get_engagement_dataframe(feed_posts, likes_df, reposts_df)
+    engagement_over_time = agg_engagement_rate(engagement_df)
+    return render_template("engagement.html", engagement_over_time=engagement_over_time)
 
 
 if __name__ == "__main__":
