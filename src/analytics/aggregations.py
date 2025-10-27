@@ -198,5 +198,5 @@ def agg_engagement_rate(engagement_df: DataFrame) -> Dict:
     grouped_df = grouped_df.reset_index()
     return {
         "labels": grouped_df["date_day"].to_list(),
-        "values": grouped_df["like_past_30"].to_list(),
+        "values": [x / y for x, y in zip(grouped_df["like_past_30"].to_list(), grouped_df["post_past_30"].to_list())]
     }
