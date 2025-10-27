@@ -107,7 +107,7 @@ def get_reposts_dataframe(likes: list, follows: list, followers: list) -> DataFr
 
 @cache.cached(timeout=3600, key_prefix="engagement_df")
 def get_engagement_dataframe(feed_posts: dict, likes_df: DataFrame, reposts_df: DataFrame) -> DataFrame:
-    return get_engagement_df(feed_posts, likes_df, reposts_df)
+    return get_engagement_df(feed_posts, likes_df, reposts_df, USER_HANDLE)
 
 
 @app.route("/")
