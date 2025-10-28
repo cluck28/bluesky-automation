@@ -12,10 +12,10 @@ from analytics.aggregations import (
     agg_engagement_by_hour,
     agg_engagement_rate,
     agg_user_feed_dataframe,
+    cohort_curves_engagement,
     embed_type_agg_user_feed_dataframe,
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
-    cohort_curves_engagement,
 )
 from analytics.engagement import (
     get_engagement_df,
@@ -233,7 +233,11 @@ def engagement():
     engagement_by_hour = agg_engagement_by_hour(engagement_df)
     print(engagement_df)
     cohort_curves = cohort_curves_engagement(engagement_df)
-    return render_template("engagement.html", engagement_over_time=engagement_over_time, engagement_by_hour=engagement_by_hour)
+    return render_template(
+        "engagement.html",
+        engagement_over_time=engagement_over_time,
+        engagement_by_hour=engagement_by_hour,
+    )
 
 
 if __name__ == "__main__":
