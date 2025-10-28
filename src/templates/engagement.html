@@ -32,6 +32,15 @@
             <canvas id="engagementByHour"></canvas>
         </div>
     </div>
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Likes Cohort Curve</h2>
+            <p>Likes Cohort Curve.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="cohortCurve"></canvas>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -39,6 +48,8 @@
     const ctx1 = document.getElementById('engagementOverTime').getContext('2d');
     const chartData2 = {{ engagement_by_hour | tojson }};
     const ctx2 = document.getElementById('engagementByHour').getContext('2d');
+    const chartData3 = {{ cohort_curves | tojson }};
+    const ctx3 = document.getElementById('cohortCurve').getContext('2d');
 
     new Chart(ctx1, {
         type: 'bar',
@@ -79,6 +90,33 @@
     new Chart(ctx2, {
         type: 'bar',
         data: chartData2,
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx3, {
+        type: 'line',
+        data: chartData3,
         options: {
             responsive: true,
             scales: {
