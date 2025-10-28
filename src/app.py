@@ -167,7 +167,7 @@ def analytics():
     followers = get_user_followers()
     follows = get_user_follows()
     likes_df = get_likes_dataframe(likes_data, follows, followers)
-    engagement_rate = get_engagement_score(likes_df, followers_count)
+    engagement_rate = get_engagement_score(likes_df, followers_count, period)
     total_likes = agg_user_feed_dataframe(
         feed_df, "total_likes", "like_count", "sum", period
     )
