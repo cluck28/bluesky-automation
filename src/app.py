@@ -9,11 +9,13 @@ from pandas import DataFrame
 from werkzeug.utils import secure_filename
 
 from analytics.aggregations import (
+    agg_engagement_by_hour,
     agg_engagement_rate,
     agg_user_feed_dataframe,
     embed_type_agg_user_feed_dataframe,
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
+    cohort_curves_engagement,
 )
 from analytics.engagement import (
     get_engagement_df,
@@ -228,8 +230,10 @@ def engagement():
     reposts_df = get_reposts_dataframe(reposts_data, follows, followers)
     engagement_df = get_engagement_dataframe(feed_posts, likes_df, reposts_df)
     engagement_over_time = agg_engagement_rate(engagement_df)
-    print(engagement_over_time)
-    return render_template("engagement.html", engagement_over_time=engagement_over_time)
+    engagement_by_hour = agg_engagement_by_hour(engagement_df)
+    print(engagement_df)
+    cohort_curves = cohort_curves_engagement(engagement_df)
+    return render_template("engagement.html", engagement_over_time=engagement_over_time, engagement_by_hour=engagement_by_hour)
 
 
 if __name__ == "__main__":

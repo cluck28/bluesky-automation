@@ -196,7 +196,47 @@ def agg_engagement_rate(engagement_df: DataFrame) -> Dict:
         grouped_df["repost"].shift(1).rolling(window=30).sum()
     )
     grouped_df = grouped_df.reset_index()
+    grouped_df["engagements_past_30"] = grouped_df["like_past_30"] + grouped_df["repost_past_30"]
     return {
         "labels": grouped_df["date_day"].to_list(),
-        "values": [x / y for x, y in zip(grouped_df["like_past_30"].to_list(), grouped_df["post_past_30"].to_list())]
+        "values": [x / y for x, y in zip(grouped_df["engagements_past_30"].to_list(), grouped_df["post_past_30"].to_list())]
     }
+
+
+def agg_engagement_by_hour(engagement_df: DataFrame) -> Dict:
+    engagement_df["date_hour_part"] = engagement_df["indexed_at"].dt.hour
+    engagement_df["date_day_part"] = engagement_df["indexed_at"].dt.day_of_week
+    engagement_df["day_hour"] = engagement_df["date_hour_part"] + engagement_df["date_day_part"]*24
+    engagement_df["post"] = (engagement_df["type"] == "post").astype(int)
+    engagement_df["like"] = (engagement_df["type"] == "like").astype(int)
+    engagement_df["repost"] = (engagement_df["type"] == "repost").astype(int)
+    grouped_df = engagement_df.groupby("day_hour", as_index=False)[
+        ["post", "like", "repost"]
+    ].sum()
+    grouped_df["norm_post"] = grouped_df["post"] / grouped_df["post"].sum()
+    grouped_df["norm_like"] = grouped_df["like"] / grouped_df["like"].sum()
+    grouped_df["norm_repost"] = grouped_df["repost"] / grouped_df["repost"].sum()
+    return {
+        "labels": grouped_df["day_hour"].to_list(),
+        "datasets": [
+            {
+                "label": "Post %",
+                "data": grouped_df["norm_post"].to_list(),
+                "backgroundColor": "rgba(255, 99, 132, 0.6)"
+            },
+            {
+                "label": "Like %",
+                "data": grouped_df["norm_like"].to_list(),
+                "backgroundColor": "rgba(54, 162, 235, 0.6)",
+            },
+            {
+                "label": "Repost %",
+                "data": grouped_df["norm_repost"].to_list(),
+                "backgroundColor": "rgba(255, 206, 86, 0.6)",
+            }
+        ]
+    }
+
+
+def cohort_curves_engagement(engagement_df: DataFrame) -> Dict:
+    return {}
