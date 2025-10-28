@@ -9,8 +9,10 @@ from pandas import DataFrame
 from werkzeug.utils import secure_filename
 
 from analytics.aggregations import (
+    agg_engagement_by_hour,
     agg_engagement_rate,
     agg_user_feed_dataframe,
+    cohort_curves_likes,
     embed_type_agg_user_feed_dataframe,
     get_user_feed_df,
     stacked_agg_user_feed_dataframe,
@@ -165,7 +167,7 @@ def analytics():
     followers = get_user_followers()
     follows = get_user_follows()
     likes_df = get_likes_dataframe(likes_data, follows, followers)
-    engagement_rate = get_engagement_score(likes_df, followers_count)
+    engagement_rate = get_engagement_score(likes_df, followers_count, period)
     total_likes = agg_user_feed_dataframe(
         feed_df, "total_likes", "like_count", "sum", period
     )
@@ -227,9 +229,21 @@ def engagement():
     likes_df = get_likes_dataframe(likes_data, follows, followers)
     reposts_df = get_reposts_dataframe(reposts_data, follows, followers)
     engagement_df = get_engagement_dataframe(feed_posts, likes_df, reposts_df)
-    engagement_over_time = agg_engagement_rate(engagement_df)
-    print(engagement_over_time)
-    return render_template("engagement.html", engagement_over_time=engagement_over_time)
+    engagement_over_time = agg_engagement_rate(engagement_df, period)
+    engagement_by_hour = agg_engagement_by_hour(engagement_df)
+    cohort_curves = cohort_curves_likes(engagement_df, period)
+    # amplification
+    # how many reposts
+
+    # return engagers
+    # how many people like many things
+
+    return render_template(
+        "engagement.html",
+        engagement_over_time=engagement_over_time,
+        engagement_by_hour=engagement_by_hour,
+        cohort_curves=cohort_curves,
+    )
 
 
 if __name__ == "__main__":

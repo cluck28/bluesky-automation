@@ -34,7 +34,7 @@ def get_user_feed_df(user_feed: list, user_handle: str) -> DataFrame:
 def agg_user_feed_dataframe(
     feed_df: DataFrame, agg_column: str, column: str, agg: str, period: str
 ) -> Dict:
-    df = feed_df
+    df = feed_df.copy()
     df["indexed_at"] = pd.to_datetime(df["indexed_at"])
     if period == "day":
         df["cohort"] = df["indexed_at"].dt.to_period("D")
@@ -68,7 +68,7 @@ def stacked_agg_user_feed_dataframe(feed_df: DataFrame, agg: str, period: str) -
         "bookmark_count",
         "repost_count",
     ]
-    df = feed_df
+    df = feed_df.copy()
     df["indexed_at"] = pd.to_datetime(df["indexed_at"])
     if period == "day":
         df["cohort"] = df["indexed_at"].dt.to_period("D")
@@ -125,7 +125,7 @@ def stacked_agg_user_feed_dataframe(feed_df: DataFrame, agg: str, period: str) -
 def embed_type_agg_user_feed_dataframe(
     feed_df: DataFrame, agg_column: str, column: str, agg: str, period: str
 ) -> Dict:
-    df = feed_df
+    df = feed_df.copy()
     df["indexed_at"] = pd.to_datetime(df["indexed_at"])
     if period == "day":
         df["cohort"] = df["indexed_at"].dt.to_period("D")
@@ -180,23 +180,153 @@ def embed_type_agg_user_feed_dataframe(
     }
 
 
-def agg_engagement_rate(engagement_df: DataFrame) -> Dict:
-    engagement_df["date_day"] = engagement_df["indexed_at"].dt.date
-    engagement_df["post"] = (engagement_df["type"] == "post").astype(int)
-    engagement_df["like"] = (engagement_df["type"] == "like").astype(int)
-    engagement_df["repost"] = (engagement_df["type"] == "repost").astype(int)
-    grouped_df = engagement_df.groupby("date_day", as_index=False)[
+def agg_engagement_rate(engagement_df: DataFrame, period: str) -> Dict:
+    if period == "day":
+        window = 1
+    elif period == "week":
+        window = 7
+    elif period == "month":
+        window = 30
+    elif period == "quarter":
+        window = 90
+    elif period == "year":
+        window = 365
+    else:
+        window = 30
+    df = engagement_df.copy()
+    df["date_day"] = df["indexed_at"].dt.date
+    df["post"] = (df["type"] == "post").astype(int)
+    df["like"] = (df["type"] == "like").astype(int)
+    df["repost"] = (df["type"] == "repost").astype(int)
+    grouped_df = df.groupby("date_day", as_index=False)[
         ["post", "like", "repost"]
     ].sum()
     grouped_df = grouped_df.sort_values("date_day")
     grouped_df = grouped_df.set_index("date_day")
-    grouped_df["post_past_30"] = grouped_df["post"].shift(1).rolling(window=30).sum()
-    grouped_df["like_past_30"] = grouped_df["like"].shift(1).rolling(window=30).sum()
+    grouped_df["post_past_30"] = (
+        grouped_df["post"].shift(1).rolling(window=window).sum()
+    )
+    grouped_df["like_past_30"] = (
+        grouped_df["like"].shift(1).rolling(window=window).sum()
+    )
     grouped_df["repost_past_30"] = (
-        grouped_df["repost"].shift(1).rolling(window=30).sum()
+        grouped_df["repost"].shift(1).rolling(window=window).sum()
     )
     grouped_df = grouped_df.reset_index()
+    grouped_df["engagements_past_30"] = (
+        grouped_df["like_past_30"] + grouped_df["repost_past_30"]
+    )
     return {
         "labels": grouped_df["date_day"].to_list(),
-        "values": grouped_df["like_past_30"].to_list(),
+        "values": [
+            x / y if y != 0 else 0
+            for x, y in zip(
+                grouped_df["engagements_past_30"].to_list(),
+                grouped_df["post_past_30"].to_list(),
+            )
+        ],
+    }
+
+
+def agg_engagement_by_hour(engagement_df: DataFrame) -> Dict:
+    df = engagement_df.copy()
+    df["date_hour_part"] = df["indexed_at"].dt.hour
+    df["date_day_part"] = df["indexed_at"].dt.day_of_week
+    df["day_hour"] = df["date_hour_part"] + df["date_day_part"] * 24
+    df["post"] = (df["type"] == "post").astype(int)
+    df["like"] = (df["type"] == "like").astype(int)
+    df["repost"] = (df["type"] == "repost").astype(int)
+    grouped_df = df.groupby("day_hour", as_index=False)[
+        ["post", "like", "repost"]
+    ].sum()
+    grouped_df["norm_post"] = grouped_df["post"] / grouped_df["post"].sum()
+    grouped_df["norm_like"] = grouped_df["like"] / grouped_df["like"].sum()
+    grouped_df["norm_repost"] = grouped_df["repost"] / grouped_df["repost"].sum()
+    return {
+        "labels": grouped_df["day_hour"].to_list(),
+        "datasets": [
+            {
+                "label": "Post %",
+                "data": grouped_df["norm_post"].to_list(),
+                "backgroundColor": "rgba(255, 99, 132, 0.6)",
+            },
+            {
+                "label": "Like %",
+                "data": grouped_df["norm_like"].to_list(),
+                "backgroundColor": "rgba(54, 162, 235, 0.6)",
+            },
+            {
+                "label": "Repost %",
+                "data": grouped_df["norm_repost"].to_list(),
+                "backgroundColor": "rgba(255, 206, 86, 0.6)",
+            },
+        ],
+    }
+
+
+def cohort_curves_likes(engagement_df: DataFrame, period: str) -> Dict:
+    df = engagement_df.copy()
+    df["hours_to_engagement"] = round(
+        (df["indexed_at"] - df["post_indexed_at"]).dt.total_seconds() / 3600, 0
+    )
+    df_filtered = df[
+        (df["type"] == "like")
+        & (df["hours_to_engagement"] > 0)
+        & (df["hours_to_engagement"] <= 504)
+    ]
+    if period == "day":
+        df_filtered["cohort"] = (
+            df_filtered["post_indexed_at"].dt.to_period("D").astype(str)
+        )
+    elif period == "week":
+        df_filtered["cohort"] = (
+            df_filtered["post_indexed_at"].dt.to_period("W").astype(str)
+        )
+    elif period == "month":
+        df_filtered["cohort"] = (
+            df_filtered["post_indexed_at"].dt.to_period("M").astype(str)
+        )
+    elif period == "quarter":
+        df_filtered["cohort"] = (
+            df_filtered["post_indexed_at"].dt.to_period("Q").astype(str)
+        )
+    elif period == "year":
+        df_filtered["cohort"] = (
+            df_filtered["post_indexed_at"].dt.to_period("Y").astype(str)
+        )
+    else:
+        df_filtered["cohort"] = (
+            df_filtered["post_indexed_at"].dt.to_period("M").astype(str)
+        )
+    cohort_curve = (
+        df_filtered.groupby("cohort")
+        .apply(
+            lambda x: x["hours_to_engagement"].value_counts().sort_index().cumsum()
+            / len(x)
+        )
+        .unstack(0)
+        .reset_index()
+    )
+    filter_cohort_curve = cohort_curve[cohort_curve["hours_to_engagement"] <= 168]
+    filled_cohort_curve = filter_cohort_curve.ffill()
+    last_three_cols = filled_cohort_curve.columns[-3:].to_list()
+    return {
+        "labels": filled_cohort_curve["hours_to_engagement"].to_list(),
+        "datasets": [
+            {
+                "label": last_three_cols[0],
+                "data": filled_cohort_curve[last_three_cols[0]].to_list(),
+                "backgroundColor": "rgba(255, 99, 132, 0.6)",
+            },
+            {
+                "label": last_three_cols[1],
+                "data": filled_cohort_curve[last_three_cols[1]].to_list(),
+                "backgroundColor": "rgba(54, 162, 235, 0.6)",
+            },
+            {
+                "label": last_three_cols[2],
+                "data": filled_cohort_curve[last_three_cols[2]].to_list(),
+                "backgroundColor": "rgba(255, 206, 86, 0.6)",
+            },
+        ],
     }
