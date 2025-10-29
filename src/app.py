@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 from atproto import Client
-from flask import Flask, redirect, render_template, request, url_for, jsonify
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_caching import Cache
 from pandas import DataFrame
 from werkzeug.utils import secure_filename
@@ -238,11 +238,13 @@ def engagement_likes_data():
 
     # return engagers
     # how many people like many things
-    return jsonify({
-        "engagement_over_time": engagement_over_time,
-        "engagement_by_hour": engagement_by_hour,
-        "cohort_curves": cohort_curves,
-    })
+    return jsonify(
+        {
+            "engagement_over_time": engagement_over_time,
+            "engagement_by_hour": engagement_by_hour,
+            "cohort_curves": cohort_curves,
+        }
+    )
 
 
 if __name__ == "__main__":

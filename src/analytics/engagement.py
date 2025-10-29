@@ -82,9 +82,7 @@ def get_engagement_score(feed_df: DataFrame, followers: int, period: str) -> int
     cutoff = datetime.now(pytz.UTC) - timedelta(days=window)
     filtered_df = df[df["indexed_at"] >= cutoff]
     print(filtered_df)
-    return round(
-        (filtered_df["like_count"].sum() / followers) * 100, 0
-    )
+    return round((filtered_df["like_count"].sum() / followers) * 100, 0)
 
 
 def get_engagement_df(
