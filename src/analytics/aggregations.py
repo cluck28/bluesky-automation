@@ -221,8 +221,8 @@ def agg_engagement_rate(engagement_df: DataFrame, period: str) -> Dict:
         "values": [
             x / y if y != 0 else 0
             for x, y in zip(
-                grouped_df["engagements_past_30"].to_list(),
-                grouped_df["post_past_30"].to_list(),
+                grouped_df["engagements_past_30"].fillna(0).to_list(),
+                grouped_df["post_past_30"].fillna(0).to_list(),
             )
         ],
     }

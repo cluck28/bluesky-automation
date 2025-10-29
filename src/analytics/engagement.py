@@ -64,7 +64,7 @@ def get_reposts_df(reposts: list, follows: list, followers: list) -> DataFrame:
     ]
 
 
-def get_engagement_score(likes_df: DataFrame, followers: int, period: str) -> int:
+def get_engagement_score(feed_df: DataFrame, followers: int, period: str) -> int:
     if period == "day":
         window = 1
     elif period == "week":
@@ -77,12 +77,13 @@ def get_engagement_score(likes_df: DataFrame, followers: int, period: str) -> in
         window = 365
     else:
         window = 30
-    df = likes_df.copy()
+    df = feed_df.copy()
     df["indexed_at"] = pd.to_datetime(df["indexed_at"], utc=True)
     cutoff = datetime.now(pytz.UTC) - timedelta(days=window)
     filtered_df = df[df["indexed_at"] >= cutoff]
+    print(filtered_df)
     return round(
-        (filtered_df[filtered_df["follower"]]["handle"].nunique() / followers) * 100, 0
+        (filtered_df["like_count"].sum() / followers) * 100, 0
     )
 
 
