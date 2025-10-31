@@ -30,6 +30,7 @@ def get_post_reposts(
                         post_indexed_at=item.indexed_at,
                         indexed_at=repost.indexed_at,
                         handle=repost.handle,
+                        avatar=repost.avatar,
                     )
                     cleaned_data.append(parsed_repost)
                 except ValidationError:

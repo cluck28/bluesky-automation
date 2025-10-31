@@ -2,22 +2,32 @@
 {% block content %}
 <div class="engagement-container">
     <h1>Engagement Dashboard</h1>
-        <!-- Aggregation Selector -->
-        <form id="periodForm" method="GET" action="/engagement" style="margin-bottom: 20px;">
-            <label for="periodSelect">Aggregation Period:</label>
-            <select name="period" id="periodSelect" onchange="document.getElementById('periodForm').submit()">
-                <option value="day" {% if request.args.get('period') == 'day' %}selected{% endif %}>Daily</option>
-                <option value="week" {% if request.args.get('period') == 'week' %}selected{% endif %}>Weekly</option>
-                <option value="month" {% if request.args.get('period') == 'month' or not request.args.get('period') %}selected{% endif %}>Monthly</option>
-                <option value="quarter" {% if request.args.get('period') == 'quarter' %}selected{% endif %}>Quarterly</option>
-                <option value="year" {% if request.args.get('period') == 'year' %}selected{% endif %}>Yearly</option>
-            </select>
-        </form>
-       <!-- Chart + Text Pairs -->
+
+    <!-- Aggregation Selector -->
+    <form id="periodForm" method="GET" action="/engagement" style="margin-bottom: 20px;">
+        <label for="periodSelect">Aggregation Period:</label>
+        <select name="period" id="periodSelect" onchange="document.getElementById('periodForm').submit()">
+            <option value="day" {% if request.args.get('period') == 'day' %}selected{% endif %}>Daily</option>
+            <option value="week" {% if request.args.get('period') == 'week' %}selected{% endif %}>Weekly</option>
+            <option value="month" {% if request.args.get('period') == 'month' or not request.args.get('period') %}selected{% endif %}>Monthly</option>
+            <option value="quarter" {% if request.args.get('period') == 'quarter' %}selected{% endif %}>Quarterly</option>
+            <option value="year" {% if request.args.get('period') == 'year' %}selected{% endif %}>Yearly</option>
+        </select>
+    </form>
+
+    <div class="button-wrapper">
+        <button id="loadLikesBtn" class="load-btn">
+            <span class="btn-text">Load Engagement Data</span>
+            <span class="spinner" style="display: none;"></span>
+        </button>
+    </div>
+    
+
+    <!-- Chart + Text Pairs -->
     <div class="chart-row">
         <div class="chart-text">
             <h2>Engagement Rate Over Time</h2>
-            <p>Engagement over time.</p>
+            <p>Track how engagement evolves over time. Spot peaks, dips, and steady climbs to understand what drives attention..</p>
         </div>
         <div class="chart-box">
             <canvas id="engagementOverTime"></canvas>
@@ -26,7 +36,7 @@
     <div class="chart-row">
         <div class="chart-text">
             <h2>Engagement Rate by Hour of Week</h2>
-            <p>Engagement by hour of week.</p>
+            <p>See when your audience is most active. Each hour of the week tells you when engagement hits its stride.</p>
         </div>
         <div class="chart-box">
             <canvas id="engagementByHour"></canvas>
@@ -35,111 +45,149 @@
     <div class="chart-row">
         <div class="chart-text">
             <h2>Likes Cohort Curve</h2>
-            <p>Likes Cohort Curve.</p>
+            <p>Visualize how audience engagement builds — and fades — over time. Each cohort curve shows fast your likes arrive.</p>
         </div>
         <div class="chart-box">
             <canvas id="cohortCurve"></canvas>
         </div>
     </div>
+
+    <!-- Top Audience -->
+    <h2>Top Engaged Audience</h2>
+    <p style="text-align: center; color: #555; margin-bottom: 25px;">Your most interactive followers — the people who consistently react, repost, and keep your content alive.</p>
+    <div id="audienceContainer"></div>
+
 </div>
 
 <script>
-    const chartData1 = {{ engagement_over_time | tojson }};
+let chart1, chart2, chart3;
+
+document.getElementById("loadLikesBtn").addEventListener("click", function() {
+    const btn = this;
+    const text = btn.querySelector(".btn-text");
+    const spinner = btn.querySelector(".spinner");
+    const period = document.getElementById("periodSelect").value;
+
+    btn.disabled = true;
+    text.textContent = "Loading...";
+    spinner.style.display = "inline-block";
+
+    fetch(`/engagement/likes-data?period=${period}`)
+        .then(response => response.json())
+        .then(data => {
+            btn.disabled = false;
+            text.textContent = "Reload Engagement Data";
+            spinner.style.display = "none";
+            renderCharts(data);
+            renderAudience(data);
+        })
+        .catch(err => {
+            btn.disabled = false;
+            text.textContent = "Try Again";
+            spinner.style.display = "none";
+            alert("Failed to load engagement data.");
+            console.error(err);
+        });
+});
+
+function renderAudience(data) {
+    const container = document.getElementById('audienceContainer');
+      container.innerHTML = '';
+      data.top_followers.forEach((follower) => {
+        // Format latest_interaction as YYYY/MM/DD
+        const date = new Date(follower.latest_interaction);
+        const formattedDate = !isNaN(date) 
+            ? `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+            : follower.latest_interaction; // fallback in case it's already formatted
+
+        // Determine active icon based on engagement
+        const active = follower.engaged_in_last_month;
+        const activeIcon = active
+            ? `<span class="active-icon" title="Active this month">🔥</span>`
+            : `<span class="inactive-icon" title="Inactive recently">💤</span>`;
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="header">
+                <div class="info">
+                    <img src="${follower.avatar}" alt="${follower.handle}" class="avatar">
+                    <h3>${ follower.handle }</h3>
+                </div>
+                ${activeIcon}
+            </div>
+            <div class="stats">
+                <span>❤ ${ follower.total_likes }</span>
+                <span>🔁 ${ follower.total_reposts }</span>
+                <span class="date"><i class="fa fa-calendar"></i> ${formattedDate}</span>
+            </div>
+        `;
+        container.appendChild(card);
+      });
+}
+
+function renderCharts(data) {
     const ctx1 = document.getElementById('engagementOverTime').getContext('2d');
-    const chartData2 = {{ engagement_by_hour | tojson }};
     const ctx2 = document.getElementById('engagementByHour').getContext('2d');
-    const chartData3 = {{ cohort_curves | tojson }};
     const ctx3 = document.getElementById('cohortCurve').getContext('2d');
 
-    new Chart(ctx1, {
+    // Destroy old charts if they exist
+    if (chart1) chart1.destroy();
+    if (chart2) chart2.destroy();
+    if (chart3) chart3.destroy();
+
+    chart1 = new Chart(ctx1, {
         type: 'bar',
         data: {
-            labels: chartData1.labels,
+            labels: data.engagement_over_time.labels,
             datasets: [{
                 label: 'Engagement Rate',
-                data: chartData1.values,
+                data: data.engagement_over_time.values,
                 backgroundColor: 'rgba(75, 192, 192, 0.4)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 2
             }]
         },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(255,255,255,0.1)'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(255,255,255,0.1)'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#eee'
-                    }
-                }
-            }
-        }
+        options: chartOptions()
     });
-    new Chart(ctx2, {
+
+    chart2 = new Chart(ctx2, {
         type: 'bar',
-        data: chartData2,
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(255,255,255,0.1)'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(255,255,255,0.1)'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#eee'
-                    }
-                }
-            }
-        }
+        data: data.engagement_by_hour,
+        options: chartOptions()
     });
-    new Chart(ctx3, {
+
+    chart3 = new Chart(ctx3, {
         type: 'line',
-        data: chartData3,
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(255,255,255,0.1)'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(255,255,255,0.1)'
-                    }
+        data: data.cohort_curves,
+        options: chartOptions()
+    });
+}
+
+function chartOptions() {
+    return {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(255,255,255,0.1)'
                 }
             },
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#eee'
-                    }
+            x: {
+                grid: {
+                    color: 'rgba(255,255,255,0.1)'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#eee'
                 }
             }
         }
-    });
+    };
+}
 </script>
 {% endblock %}

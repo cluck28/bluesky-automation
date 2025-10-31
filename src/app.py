@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 from atproto import Client
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_caching import Cache
 from pandas import DataFrame
 from werkzeug.utils import secure_filename
@@ -22,6 +22,7 @@ from analytics.engagement import (
     get_engagement_score,
     get_likes_df,
     get_reposts_df,
+    get_top_followers,
 )
 from analytics.top_posts import (
     get_most_bookmarked_post,
@@ -163,11 +164,7 @@ def analytics():
     handle = user_profile.handle
     followers_count = user_profile.followers_count
     following_count = user_profile.follows_count
-    likes_data = get_user_post_likes(feed_posts)
-    followers = get_user_followers()
-    follows = get_user_follows()
-    likes_df = get_likes_dataframe(likes_data, follows, followers)
-    engagement_rate = get_engagement_score(likes_df, followers_count, period)
+    engagement_rate = get_engagement_score(feed_df, followers_count, period)
     total_likes = agg_user_feed_dataframe(
         feed_df, "total_likes", "like_count", "sum", period
     )
@@ -180,7 +177,6 @@ def analytics():
         feed_df, "average_likes", "like_count", "mean", period
     )
     average_likes = round(likes / posts, 0)
-    print(average_likes)
     stacked_totals = stacked_agg_user_feed_dataframe(feed_df, "sum", period)
     stacked_averages = stacked_agg_user_feed_dataframe(feed_df, "mean", period)
     top_liked_post_img, top_liked_post_count = get_most_liked_post(
@@ -220,31 +216,33 @@ def analytics():
 
 @app.route("/engagement", methods=["GET"])
 def engagement():
+    return render_template("engagement.html")
+
+
+@app.route("/engagement/likes-data", methods=["GET"])
+def engagement_likes_data():
     period = request.args.get("period", "month")  # default to month
     feed_posts = get_user_feed()
     likes_data = get_user_post_likes(feed_posts)
-    reposts_data = get_user_post_reposts(feed_posts)
     followers = get_user_followers()
     follows = get_user_follows()
     likes_df = get_likes_dataframe(likes_data, follows, followers)
+    reposts_data = get_user_post_reposts(feed_posts)
     reposts_df = get_reposts_dataframe(reposts_data, follows, followers)
     engagement_df = get_engagement_dataframe(feed_posts, likes_df, reposts_df)
     engagement_over_time = agg_engagement_rate(engagement_df, period)
     engagement_by_hour = agg_engagement_by_hour(engagement_df)
     cohort_curves = cohort_curves_likes(engagement_df, period)
-    # amplification
-    # how many reposts
-
-    # return engagers
-    # how many people like many things
-
-    return render_template(
-        "engagement.html",
-        engagement_over_time=engagement_over_time,
-        engagement_by_hour=engagement_by_hour,
-        cohort_curves=cohort_curves,
+    top_followers = get_top_followers(engagement_df, 15)
+    return jsonify(
+        {
+            "engagement_over_time": engagement_over_time,
+            "engagement_by_hour": engagement_by_hour,
+            "cohort_curves": cohort_curves,
+            "top_followers": top_followers,
+        }
     )
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5555)
