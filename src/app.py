@@ -22,6 +22,7 @@ from analytics.engagement import (
     get_engagement_score,
     get_likes_df,
     get_reposts_df,
+    get_top_followers,
 )
 from analytics.top_posts import (
     get_most_bookmarked_post,
@@ -176,7 +177,6 @@ def analytics():
         feed_df, "average_likes", "like_count", "mean", period
     )
     average_likes = round(likes / posts, 0)
-    print(average_likes)
     stacked_totals = stacked_agg_user_feed_dataframe(feed_df, "sum", period)
     stacked_averages = stacked_agg_user_feed_dataframe(feed_df, "mean", period)
     top_liked_post_img, top_liked_post_count = get_most_liked_post(
@@ -233,19 +233,16 @@ def engagement_likes_data():
     engagement_over_time = agg_engagement_rate(engagement_df, period)
     engagement_by_hour = agg_engagement_by_hour(engagement_df)
     cohort_curves = cohort_curves_likes(engagement_df, period)
-    # amplification
-    # how many reposts
-
-    # return engagers
-    # how many people like many things
+    top_followers = get_top_followers(engagement_df, 15)
     return jsonify(
         {
             "engagement_over_time": engagement_over_time,
             "engagement_by_hour": engagement_by_hour,
             "cohort_curves": cohort_curves,
+            "top_followers": top_followers,
         }
     )
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5555)

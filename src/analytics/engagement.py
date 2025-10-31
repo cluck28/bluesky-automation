@@ -15,7 +15,7 @@ def get_likes_df(likes: list, follows: list, followers: list) -> DataFrame:
     )
     merged["following"] = merged["follow_index"].notnull()
     merged = merged[
-        ["post_uri", "post_indexed_at", "indexed_at", "handle", "following"]
+        ["post_uri", "post_indexed_at", "indexed_at", "handle", "avatar", "following"]
     ]
     merged = merged.merge(
         followers_df[["handle", "follow_index"]], on="handle", how="left"
@@ -28,6 +28,7 @@ def get_likes_df(likes: list, follows: list, followers: list) -> DataFrame:
             "post_indexed_at",
             "indexed_at",
             "handle",
+            "avatar",
             "following",
             "follower",
             "type",
@@ -44,7 +45,7 @@ def get_reposts_df(reposts: list, follows: list, followers: list) -> DataFrame:
     )
     merged["following"] = merged["follow_index"].notnull()
     merged = merged[
-        ["post_uri", "post_indexed_at", "indexed_at", "handle", "following"]
+        ["post_uri", "post_indexed_at", "indexed_at", "handle", "avatar", "following"]
     ]
     merged = merged.merge(
         followers_df[["handle", "follow_index"]], on="handle", how="left"
@@ -57,6 +58,7 @@ def get_reposts_df(reposts: list, follows: list, followers: list) -> DataFrame:
             "post_indexed_at",
             "indexed_at",
             "handle",
+            "avatar",
             "following",
             "follower",
             "type",
@@ -82,7 +84,7 @@ def get_engagement_score(feed_df: DataFrame, followers: int, period: str) -> int
     cutoff = datetime.now(pytz.UTC) - timedelta(days=window)
     filtered_df = df[df["indexed_at"] >= cutoff]
     print(filtered_df)
-    return round((filtered_df["like_count"].sum() / followers) * 100, 0)
+    return round((filtered_df["like_count"].mean() / followers) * 100, 0)
 
 
 def get_engagement_df(
@@ -98,6 +100,7 @@ def get_engagement_df(
                 "post_indexed_at": item.indexed_at,
                 "indexed_at": item.indexed_at,
                 "handle": user_handle,
+                "avatar": None,
                 "following": False,
                 "follower": False,
                 "type": "post",
@@ -105,3 +108,24 @@ def get_engagement_df(
         )
     feed_df = pd.DataFrame(post_list)
     return pd.concat([likes_df, reposts_df, feed_df], ignore_index=True)
+
+
+def get_top_followers(engagement_df: DataFrame, limit: int = 4) -> Dict:
+    df = engagement_df.copy()
+    df_grouped = df.groupby(["handle", "avatar", "following", "follower"], as_index=False).count()
+    now = datetime.now(pytz.UTC)
+    one_month_ago = now - timedelta(days=30)  # Roughly one month
+    audience = []
+    for index, row in df_grouped[df_grouped["follower"]].sort_values("type", ascending=False).head(limit+1).iterrows():
+        recent_engagement_df = engagement_df[engagement_df["handle"] == row["handle"]].sort_values("indexed_at", ascending=False)
+        audience.append({
+            "handle": row["handle"],
+            "avatar": row["avatar"],
+            "total_likes": len(recent_engagement_df[recent_engagement_df["type"] == "like"]),
+            "total_reposts": len(recent_engagement_df[recent_engagement_df["type"] == "repost"]),
+            "first_interaction": recent_engagement_df["indexed_at"].min(),
+            "latest_interaction": recent_engagement_df["indexed_at"].max(),
+            "follower": True,
+            "engaged_in_last_month": one_month_ago <= recent_engagement_df["indexed_at"].max() <= now,
+        })
+    return audience

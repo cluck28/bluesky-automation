@@ -27,7 +27,7 @@
     <div class="chart-row">
         <div class="chart-text">
             <h2>Engagement Rate Over Time</h2>
-            <p>Engagement over time.</p>
+            <p>Track how engagement evolves over time. Spot peaks, dips, and steady climbs to understand what drives attention..</p>
         </div>
         <div class="chart-box">
             <canvas id="engagementOverTime"></canvas>
@@ -36,7 +36,7 @@
     <div class="chart-row">
         <div class="chart-text">
             <h2>Engagement Rate by Hour of Week</h2>
-            <p>Engagement by hour of week.</p>
+            <p>See when your audience is most active. Each hour of the week tells you when engagement hits its stride.</p>
         </div>
         <div class="chart-box">
             <canvas id="engagementByHour"></canvas>
@@ -45,12 +45,18 @@
     <div class="chart-row">
         <div class="chart-text">
             <h2>Likes Cohort Curve</h2>
-            <p>Likes Cohort Curve.</p>
+            <p>Visualize how audience engagement builds — and fades — over time. Each cohort curve shows fast your likes arrive.</p>
         </div>
         <div class="chart-box">
             <canvas id="cohortCurve"></canvas>
         </div>
     </div>
+
+    <!-- Top Audience -->
+    <h2>Top Engaged Audience</h2>
+    <p style="text-align: center; color: #555; margin-bottom: 25px;">Your most interactive followers — the people who consistently react, repost, and keep your content alive.</p>
+    <div id="audienceContainer"></div>
+
 </div>
 
 <script>
@@ -73,6 +79,7 @@ document.getElementById("loadLikesBtn").addEventListener("click", function() {
             text.textContent = "Reload Engagement Data";
             spinner.style.display = "none";
             renderCharts(data);
+            renderAudience(data);
         })
         .catch(err => {
             btn.disabled = false;
@@ -82,6 +89,42 @@ document.getElementById("loadLikesBtn").addEventListener("click", function() {
             console.error(err);
         });
 });
+
+function renderAudience(data) {
+    const container = document.getElementById('audienceContainer');
+      container.innerHTML = '';
+      data.top_followers.forEach((follower) => {
+        // Format latest_interaction as YYYY/MM/DD
+        const date = new Date(follower.latest_interaction);
+        const formattedDate = !isNaN(date) 
+            ? `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`
+            : follower.latest_interaction; // fallback in case it's already formatted
+
+        // Determine active icon based on engagement
+        const active = follower.engaged_in_last_month;
+        const activeIcon = active
+            ? `<span class="active-icon" title="Active this month">🔥</span>`
+            : `<span class="inactive-icon" title="Inactive recently">💤</span>`;
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="header">
+                <div class="info">
+                    <img src="${follower.avatar}" alt="${follower.handle}" class="avatar">
+                    <h3>${ follower.handle }</h3>
+                </div>
+                ${activeIcon}
+            </div>
+            <div class="stats">
+                <span>❤ ${ follower.total_likes }</span>
+                <span>🔁 ${ follower.total_reposts }</span>
+                <span class="date"><i class="fa fa-calendar"></i> ${formattedDate}</span>
+            </div>
+        `;
+        container.appendChild(card);
+      });
+}
 
 function renderCharts(data) {
     const ctx1 = document.getElementById('engagementOverTime').getContext('2d');

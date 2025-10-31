@@ -180,3 +180,118 @@ h1 {
         transform: translateY(0);
     }
 }
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    color: #222;
+}
+/* ======= Top Engaged Audience Section ======= */
+#audienceContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 25px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto 60px;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.card {
+    background: linear-gradient(160deg, #ffffff, #f9f9f9);
+    border: 1px solid #ddd;
+    border-radius: 16px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+    padding: 20px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Header area with avatar + handle */
+.header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.avatar {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ddd;
+    margin-right: 15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.info h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: #222;
+}
+
+.info p {
+    margin: 4px 0 0;
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Stats layout */
+.stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95em;
+    color: #333;
+    margin-top: 10px;
+}
+
+.stats span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #f2f2f2;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-weight: 500;
+}
+
+.stats span:first-child {
+    color: #e63946; /* red for likes */
+}
+
+.stats span:nth-child(2) {
+    color: #1d3557; /* blue for reposts */
+}
+
+/* Add subtle hover glow on icons */
+.stats span:hover {
+    background: #e9ecef;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+    #audienceContainer {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .avatar {
+        width: 55px;
+        height: 55px;
+    }
+
+    .stats {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+}
