@@ -1,7 +1,8 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
-from typing import Optional
+
 
 class Like(BaseModel):
     post_uri: str

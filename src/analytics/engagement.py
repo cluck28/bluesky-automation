@@ -112,20 +112,37 @@ def get_engagement_df(
 
 def get_top_followers(engagement_df: DataFrame, limit: int = 4) -> Dict:
     df = engagement_df.copy()
-    df_grouped = df.groupby(["handle", "avatar", "following", "follower"], as_index=False).count()
+    df_grouped = df.groupby(
+        ["handle", "avatar", "following", "follower"], as_index=False
+    ).count()
     now = datetime.now(pytz.UTC)
     one_month_ago = now - timedelta(days=30)  # Roughly one month
     audience = []
-    for index, row in df_grouped[df_grouped["follower"]].sort_values("type", ascending=False).head(limit+1).iterrows():
-        recent_engagement_df = engagement_df[engagement_df["handle"] == row["handle"]].sort_values("indexed_at", ascending=False)
-        audience.append({
-            "handle": row["handle"],
-            "avatar": row["avatar"],
-            "total_likes": len(recent_engagement_df[recent_engagement_df["type"] == "like"]),
-            "total_reposts": len(recent_engagement_df[recent_engagement_df["type"] == "repost"]),
-            "first_interaction": recent_engagement_df["indexed_at"].min(),
-            "latest_interaction": recent_engagement_df["indexed_at"].max(),
-            "follower": True,
-            "engaged_in_last_month": one_month_ago <= recent_engagement_df["indexed_at"].max() <= now,
-        })
+    for index, row in (
+        df_grouped[df_grouped["follower"]]
+        .sort_values("type", ascending=False)
+        .head(limit + 1)
+        .iterrows()
+    ):
+        recent_engagement_df = engagement_df[
+            engagement_df["handle"] == row["handle"]
+        ].sort_values("indexed_at", ascending=False)
+        audience.append(
+            {
+                "handle": row["handle"],
+                "avatar": row["avatar"],
+                "total_likes": len(
+                    recent_engagement_df[recent_engagement_df["type"] == "like"]
+                ),
+                "total_reposts": len(
+                    recent_engagement_df[recent_engagement_df["type"] == "repost"]
+                ),
+                "first_interaction": recent_engagement_df["indexed_at"].min(),
+                "latest_interaction": recent_engagement_df["indexed_at"].max(),
+                "follower": True,
+                "engaged_in_last_month": one_month_ago
+                <= recent_engagement_df["indexed_at"].max()
+                <= now,
+            }
+        )
     return audience
