@@ -1,0 +1,15 @@
+{% for media in media_items %}
+<div class="d-flex justify-content-center mb-4 sortable-item" data-id="{{ media.path }}">
+    <div class="card shadow-sm d-flex flex-row align-items-center w-100" style="max-width: 700px;">
+        <img src="{{ url_for('static', filename=media.path) }}"
+             alt="media"
+             class="rounded-start"
+             style="width: 40%; height: 200px; object-fit: cover;">
+        <div class="card-body">
+            <h5 class="card-title mb-2">{{ media.text or "No Text Added" }}</h5>
+            <p class="card-text text-muted mb-1">Scheduled: {{ media.date or "TBD" }}</p>
+            <p class="card-text small">Status: {{ media.status or "Pending" }}</p>
+        </div>
+    </div>
+</div>
+{% endfor %}

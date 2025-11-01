@@ -1,61 +1,87 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
+<div class="container my-4">
+
     <!-- Top Section -->
-    <section class="queue-rules">
-        <h2>Queue Rules</h2>
-        <input type="text" placeholder="e.g., M/W/F at 10am">
+    <section class="queue-rules mb-5">
+        <h2 class="mb-3">Queue Rules</h2>
+        <form method="POST" action="{{ url_for('add_rule') }}">
+            <div class="input-group">
+                <input type="text" name="rule" class="form-control" placeholder="e.g., M/W/F at 10am" required>
+                <button type="submit" class="btn btn-primary">Add Rule</button>
+            </div>
+        </form>
     </section>
 
     <!-- Middle Section -->
-    <section class="queue-list">
-        <h2>Upcoming Posts</h2>
-        <div class="queue-item" draggable="true">Post 1 - Caption preview</div>
-        <div class="queue-item" draggable="true">Post 2 - Caption preview</div>
-        <div class="queue-item" draggable="true">Post 3 - Caption preview</div>
-        <div class="queue-item" draggable="true">Post 4 - Caption preview</div>
-    </section>
+    <section class="queue-list bg-light p-4 rounded">
+        <h2 class="mb-4">Upcoming Posts</h2>
 
+        <div id="sortable-list">
+            {% for media in media_items %}
+            <div class="d-flex justify-content-center mb-4 sortable-item" data-id="{{ media.path }}">
+                <div class="card shadow-sm d-flex flex-row align-items-center w-100" style="max-width: 700px;">
+                    <img src="{{ url_for('static', filename=media.path) }}"
+                         alt="media"
+                         class="rounded-start"
+                         style="width: 40%; height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">{{ media.text or "No Text Added" }}</h5>
+                        <p class="card-text text-muted mb-1">Scheduled: {{ media.date or "TBD" }}</p>
+                        <p class="card-text small">Status: {{ media.status or "Pending" }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </section>
 </div>
 
 <script>
-    const toggleCompact = () => document.body.classList.toggle('compact');
+let sortableInstance; // Keep a single instance of Sortable
 
-// Drag and drop reorder logic (basic)
-const queueList = document.querySelector('.queue-list');
-let dragSrc = null;
+function initSortable() {
+    const list = document.getElementById("sortable-list");
 
-function handleDragStart(e) {
-    dragSrc = this;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.innerHTML);
-    this.style.opacity = '0.5';
-}
+    if (!sortableInstance) {
+        sortableInstance = Sortable.create(list, {
+            animation: 150,
+            handle: ".card",
+            ghostClass: "sortable-ghost",
+            onEnd: function(evt) {
+                // Map the current order of items
+                const order = Array.from(list.children)
+                                   .filter(el => el.classList.contains("sortable-item"))
+                                   .map(el => el.dataset.id);
 
-function handleDragEnd() {
-    this.style.opacity = '1';
-}
+                console.log("New order:", order);
 
-function handleDragOver(e) {
-    e.preventDefault();
-    return false;
-}
-
-function handleDrop(e) {
-    e.stopPropagation();
-    if (dragSrc !== this) {
-        dragSrc.innerHTML = this.innerHTML;
-        this.innerHTML = e.dataTransfer.getData('text/html');
+                // Send to Flask backend
+                fetch("/update_order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ order: order })
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Replace only the inner HTML of the list
+                    list.innerHTML = html;
+                    // No need to reinitialize Sortable since instance stays
+                })
+                .catch(err => console.error("Error updating order:", err));
+            }
+        });
     }
-    return false;
 }
 
-const items = document.querySelectorAll('.queue-item');
-items.forEach(item => {
-    item.addEventListener('dragstart', handleDragStart);
-    item.addEventListener('dragend', handleDragEnd);
-    item.addEventListener('dragover', handleDragOver);
-    item.addEventListener('drop', handleDrop);
-});
+document.addEventListener("DOMContentLoaded", initSortable);
 </script>
+
+<style>
+.sortable-ghost {
+    opacity: 0.6;
+    background: #e0e0e0;
+}
+</style>
 {% endblock %}

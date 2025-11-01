@@ -34,6 +34,11 @@ from bluesky_client.get_post_likes import get_post_likes
 from bluesky_client.get_post_reposts import get_post_reposts
 from bluesky_client.get_profile import get_followers, get_follows, get_profile
 from bluesky_client.schemas.profile import Profile
+from scheduler.scheduler_utils import (
+    get_saved_schedule,
+    update_queue_rules,
+    update_saved_schedule,
+)
 
 app = Flask(__name__)
 app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
@@ -44,6 +49,10 @@ USER_HANDLE = os.getenv("CLIENT_USERNAME")
 UPLOAD_PATH = "uploads"
 WEB_PATH = os.path.abspath("./static")
 UPLOAD_FOLDER = os.path.join(WEB_PATH, UPLOAD_PATH)
+SCHEDULE_FILE_PATH = "schedule/schedule.csv"
+QUEUE_RULES_FILE_PATH = "schedule/rules.csv"
+SCHEDULE_FOLDER = os.path.join(WEB_PATH, SCHEDULE_FILE_PATH)
+RULES_FOLDER = os.path.join(WEB_PATH, QUEUE_RULES_FILE_PATH)
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -138,14 +147,23 @@ def upload():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            schedule = get_saved_schedule(SCHEDULE_FOLDER)
+            schedule.append(
+                {
+                    "path": os.path.join(UPLOAD_PATH, filename),
+                    "text": None,
+                    "date": None,
+                    "status": None,
+                }
+            )
+            update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER, schedule)
             return redirect(url_for("gallery"))
     return render_template("upload.html")
 
 
 @app.route("/gallery")
 def gallery():
-    media_files = os.listdir(app.config["UPLOAD_FOLDER"])
-    media_paths = [os.path.join(UPLOAD_PATH, f) for f in media_files]
+    media_paths = get_saved_schedule(SCHEDULE_FOLDER)
     feed_posts = get_user_feed()
     external_paths = [thumb.embed.thumbnail for thumb in feed_posts]
     likes = [post.like_count for post in feed_posts]
@@ -248,7 +266,28 @@ def engagement_likes_data():
 
 @app.route("/schedule", methods=["GET", "POST"])
 def schedule():
-    return render_template("schedule.html")
+    media_items = get_saved_schedule(SCHEDULE_FOLDER)
+    return render_template("schedule.html", media_items=media_items)
+
+
+@app.route("/add_rule", methods=["GET", "POST"])
+def add_rule():
+    data = request.get_json()
+    new_rule = data.get("rule", [])
+    update_queue_rules(RULES_FOLDER, new_rule)
+    update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER)
+    return jsonify({"success": True})
+
+
+@app.route("/update_order", methods=["GET", "POST"])
+def update_order():
+    data = request.get_json()
+    new_schedule = []
+    for item in data.get("order", []):
+        new_schedule.append({"path": item, "text": None, "date": None, "status": None})
+    update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER, new_schedule)
+    media_items = get_saved_schedule(SCHEDULE_FOLDER)
+    return render_template("_sortable_list.html", media_items=media_items)
 
 
 if __name__ == "__main__":
