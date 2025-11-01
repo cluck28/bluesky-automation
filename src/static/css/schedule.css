@@ -68,43 +68,6 @@ h2 {
   background-color: #e0e0e0;
 }
 
-/* Bottom draft section */
-.draft-box {
-  background-color: #ffffff;
-  padding: 1rem;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.draft-box textarea {
-  width: 100%;
-  padding: 0.5rem;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  resize: vertical;
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.draft-box button {
-  align-self: flex-end;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  background-color: #4caf50;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.draft-box button:hover {
-  background-color: #45a047;
-}
-
 /* Optional AI suggestions */
 .ai-suggestions {
   font-size: 0.85rem;
