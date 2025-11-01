@@ -41,7 +41,7 @@ cache = Cache(app)
 
 # Config
 USER_HANDLE = os.getenv("CLIENT_USERNAME")
-UPLOAD_FOLDER = "./static/uploads"
+UPLOAD_FOLDER = os.path.abspath("./static/uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
