@@ -284,12 +284,7 @@ def update_order():
     data = request.get_json()
     new_schedule = []
     for item in data.get("order", []):
-        new_schedule.append({
-            "path": item,
-            "text": None,
-            "date": None,
-            "status": None
-        })
+        new_schedule.append({"path": item, "text": None, "date": None, "status": None})
     update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER, new_schedule)
     media_items = get_saved_schedule(SCHEDULE_FOLDER)
     return render_template("_sortable_list.html", media_items=media_items)
