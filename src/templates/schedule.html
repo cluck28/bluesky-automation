@@ -18,28 +18,43 @@
         <h2 class="mb-4">Upcoming Posts</h2>
 
         <div id="sortable-list">
-            {% for media in media_items %}
-            <div class="d-flex justify-content-center mb-4 sortable-item" data-id="{{ media.path }}">
-                <div class="card shadow-sm d-flex flex-row align-items-center w-100" style="max-width: 700px;">
-                    <img src="{{ url_for('static', filename=media.path) }}"
-                         alt="media"
-                         class="rounded-start"
-                         style="width: 40%; height: 200px; object-fit: cover;">
-                    <div class="card-body">
-                        <h5 class="card-title mb-2">{{ media.text or "No Text Added" }}</h5>
-                        <p class="card-text text-muted mb-1">Scheduled: {{ media.date or "TBD" }}</p>
-                        <p class="card-text small">Status: {{ media.status or "Pending" }}</p>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+            {% include "_sortable_list.html" %}
         </div>
-
     </section>
 </div>
 
 <script>
-let sortableInstance; // Keep a single instance of Sortable
+let sortableInstance;
+
+function initEditable() {
+    document.querySelectorAll(".editable-text").forEach(el => {
+        el.addEventListener("blur", handleTextEdit);
+        el.addEventListener("keydown", e => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                el.blur();
+            }
+        });
+    });
+}
+
+function handleTextEdit(e) {
+    const el = e.target;
+    const id = el.closest(".sortable-item").dataset.id;
+    const newText = el.textContent.trim();
+
+    fetch("/update_text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id, text: newText })
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById("sortable-list").innerHTML = html;
+        initEditable(); // reattach text editing
+    })
+    .catch(err => console.error("Error updating text:", err));
+}
 
 function initSortable() {
     const list = document.getElementById("sortable-list");
@@ -49,15 +64,11 @@ function initSortable() {
             animation: 150,
             handle: ".card",
             ghostClass: "sortable-ghost",
-            onEnd: function(evt) {
-                // Map the current order of items
+            onEnd: function() {
                 const order = Array.from(list.children)
                                    .filter(el => el.classList.contains("sortable-item"))
                                    .map(el => el.dataset.id);
 
-                console.log("New order:", order);
-
-                // Send to Flask backend
                 fetch("/update_order", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -65,9 +76,8 @@ function initSortable() {
                 })
                 .then(response => response.text())
                 .then(html => {
-                    // Replace only the inner HTML of the list
                     list.innerHTML = html;
-                    // No need to reinitialize Sortable since instance stays
+                    initEditable();
                 })
                 .catch(err => console.error("Error updating order:", err));
             }
@@ -75,13 +85,15 @@ function initSortable() {
     }
 }
 
-document.addEventListener("DOMContentLoaded", initSortable);
+document.addEventListener("DOMContentLoaded", () => {
+    initSortable();
+    initEditable();
+});
 </script>
 
 <style>
-.sortable-ghost {
-    opacity: 0.6;
-    background: #e0e0e0;
-}
+.sortable-ghost { opacity: 0.6; background: #e0e0e0; }
+.editable-text { border: 1px dashed transparent; padding: 2px; cursor: text; }
+.editable-text:focus { outline: none; border-color: #007bff; background: #f0f8ff; }
 </style>
 {% endblock %}
