@@ -146,7 +146,6 @@ def upload():
 def gallery():
     media_files = os.listdir(app.config["UPLOAD_FOLDER"])
     media_paths = [os.path.join(UPLOAD_PATH, f) for f in media_files]
-    print(media_paths)
     feed_posts = get_user_feed()
     external_paths = [thumb.embed.thumbnail for thumb in feed_posts]
     likes = [post.like_count for post in feed_posts]
@@ -245,6 +244,11 @@ def engagement_likes_data():
             "top_followers": top_followers,
         }
     )
+
+
+@app.route("/schedule", methods=["GET", "POST"])
+def schedule():
+    return render_template("schedule.html")
 
 
 if __name__ == "__main__":
