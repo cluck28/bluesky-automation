@@ -3,7 +3,7 @@ from typing import Dict, List
 import pandas as pd
 
 
-def build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
+def _build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
     # We want to save the schedule as a dataframe
     # We want to make sure to compute all the dates
     # We want to make sure we deduplicate against the uploads
@@ -21,9 +21,9 @@ def get_saved_schedule(file_path: str) -> List[Dict]:
 def update_saved_schedule(file_path: str, queue_file_path: str, new_order: List = []):
     rules = get_queue_rules(queue_file_path)
     if new_order:
-        build_schedule(file_path, new_order, rules)
+        _build_schedule(file_path, new_order, rules)
     schedule = get_saved_schedule(file_path)
-    build_schedule(file_path, schedule, rules)
+    _build_schedule(file_path, schedule, rules)
     return
 
 
