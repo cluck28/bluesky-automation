@@ -1,4 +1,67 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Schedule Posts</h2>
+<div class="container">
+    <!-- Top Section -->
+    <section class="queue-rules">
+        <h2>Queue Rules</h2>
+        <input type="text" placeholder="e.g., M/W/F at 10am">
+    </section>
+
+    <!-- Middle Section -->
+    <section class="queue-list">
+        <h2>Upcoming Posts</h2>
+        <div class="queue-item" draggable="true">Post 1 - Caption preview</div>
+        <div class="queue-item" draggable="true">Post 2 - Caption preview</div>
+        <div class="queue-item" draggable="true">Post 3 - Caption preview</div>
+        <div class="queue-item" draggable="true">Post 4 - Caption preview</div>
+    </section>
+
+    <!-- Bottom Section -->
+    <section class="draft-box">
+        <textarea rows="3" placeholder="Write a draft..."></textarea>
+        <div class="ai-suggestions">Suggested: Best time to post & caption length</div>
+        <button>Add to Queue</button>
+    </section>
+</div>
+
+<script>
+    const toggleCompact = () => document.body.classList.toggle('compact');
+
+// Drag and drop reorder logic (basic)
+const queueList = document.querySelector('.queue-list');
+let dragSrc = null;
+
+function handleDragStart(e) {
+    dragSrc = this;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+    this.style.opacity = '0.5';
+}
+
+function handleDragEnd() {
+    this.style.opacity = '1';
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    return false;
+}
+
+function handleDrop(e) {
+    e.stopPropagation();
+    if (dragSrc !== this) {
+        dragSrc.innerHTML = this.innerHTML;
+        this.innerHTML = e.dataTransfer.getData('text/html');
+    }
+    return false;
+}
+
+const items = document.querySelectorAll('.queue-item');
+items.forEach(item => {
+    item.addEventListener('dragstart', handleDragStart);
+    item.addEventListener('dragend', handleDragEnd);
+    item.addEventListener('dragover', handleDragOver);
+    item.addEventListener('drop', handleDrop);
+});
+</script>
 {% endblock %}
