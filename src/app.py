@@ -288,7 +288,9 @@ def update_order():
         for old_entries in old_schedule:
             if old_entries["path"] == item:
                 old_text = old_entries["text"]
-        new_schedule.append({"path": item, "text": old_text, "date": None, "status": None})
+        new_schedule.append(
+            {"path": item, "text": old_text, "date": None, "status": None}
+        )
     update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER, new_schedule)
     media_items = get_saved_schedule(SCHEDULE_FOLDER)
     return render_template("_sortable_list.html", media_items=media_items)
@@ -303,19 +305,23 @@ def update_text():
     new_schedule = []
     for item in old_schedule:
         if media_id == item["path"]:
-            new_schedule.append({
-                "path": item["path"],
-                "text": new_text,
-                "date": item["date"],
-                "status": item["status"]
-            })
+            new_schedule.append(
+                {
+                    "path": item["path"],
+                    "text": new_text,
+                    "date": item["date"],
+                    "status": item["status"],
+                }
+            )
         else:
-            new_schedule.append({
-                "path": item["path"],
-                "text": item["text"],
-                "date": item["date"],
-                "status": item["status"]
-            })
+            new_schedule.append(
+                {
+                    "path": item["path"],
+                    "text": item["text"],
+                    "date": item["date"],
+                    "status": item["status"],
+                }
+            )
     update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER, new_schedule)
     render_schedule = get_saved_schedule(SCHEDULE_FOLDER)
     return render_template("_sortable_list.html", media_items=render_schedule)
