@@ -19,7 +19,7 @@
 
         <div id="sortable-list">
             {% for media in media_items %}
-            <div class="d-flex justify-content-center mb-4 sortable-item" data-id="{{ media.id }}">
+            <div class="d-flex justify-content-center mb-4 sortable-item" data-id="{{ media.path }}">
                 <div class="card shadow-sm d-flex flex-row align-items-center w-100" style="max-width: 700px;">
                     <img src="{{ url_for('static', filename=media.path) }}"
                          alt="media"
@@ -39,27 +39,43 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+let sortableInstance; // Keep a single instance of Sortable
+
+function initSortable() {
     const list = document.getElementById("sortable-list");
 
-    Sortable.create(list, {
-        animation: 150,
-        handle: ".card", // make the card itself draggable
-        ghostClass: "sortable-ghost",
-        onEnd: function (evt) {
-            // Gather the new order of post IDs
-            const order = Array.from(list.querySelectorAll(".sortable-item"))
-                               .map(item => item.dataset.id);
+    if (!sortableInstance) {
+        sortableInstance = Sortable.create(list, {
+            animation: 150,
+            handle: ".card",
+            ghostClass: "sortable-ghost",
+            onEnd: function(evt) {
+                // Map the current order of items
+                const order = Array.from(list.children)
+                                   .filter(el => el.classList.contains("sortable-item"))
+                                   .map(el => el.dataset.id);
 
-            // Optionally, send it to your Flask backend to persist order
-            fetch("{{ url_for('update_order') }}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ order })
-            });
-        }
-    });
-});
+                console.log("New order:", order);
+
+                // Send to Flask backend
+                fetch("/update_order", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ order: order })
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Replace only the inner HTML of the list
+                    list.innerHTML = html;
+                    // No need to reinitialize Sortable since instance stays
+                })
+                .catch(err => console.error("Error updating order:", err));
+            }
+        });
+    }
+}
+
+document.addEventListener("DOMContentLoaded", initSortable);
 </script>
 
 <style>

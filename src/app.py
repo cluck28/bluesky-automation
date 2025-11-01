@@ -282,9 +282,17 @@ def add_rule():
 @app.route("/update_order", methods=["GET", "POST"])
 def update_order():
     data = request.get_json()
-    new_order = data.get("order", [])
-    update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER, new_order)
-    return jsonify({"success": True})
+    new_schedule = []
+    for item in data.get("order", []):
+        new_schedule.append({
+            "path": item,
+            "text": None,
+            "date": None,
+            "status": None
+        })
+    update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER, new_schedule)
+    media_items = get_saved_schedule(SCHEDULE_FOLDER)
+    return render_template("_sortable_list.html", media_items=media_items)
 
 
 if __name__ == "__main__":
