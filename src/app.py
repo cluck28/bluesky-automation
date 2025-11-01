@@ -34,6 +34,12 @@ from bluesky_client.get_post_likes import get_post_likes
 from bluesky_client.get_post_reposts import get_post_reposts
 from bluesky_client.get_profile import get_followers, get_follows, get_profile
 from bluesky_client.schemas.profile import Profile
+from scheduler.scheduler_utils import (
+    get_queue_rules,
+    get_saved_schedule,
+    update_queue_rules,
+    update_saved_schedule,
+)
 
 app = Flask(__name__)
 app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
@@ -248,7 +254,35 @@ def engagement_likes_data():
 
 @app.route("/schedule", methods=["GET", "POST"])
 def schedule():
-    return render_template("schedule.html")
+    media_files = os.listdir(app.config["UPLOAD_FOLDER"])
+    media_paths = [os.path.join(UPLOAD_PATH, f) for f in media_files]
+    media_items = get_saved_schedule()
+    media_items = []
+    for path in media_paths:
+        media_items.append({"path": path})
+    return render_template("schedule.html", media_items=media_items)
+
+
+@app.route("/add_rule", methods=["GET", "POST"])
+def add_rule():
+    data = request.get_json()
+    new_rule = data.get("rule", [])
+    update_queue_rules(new_rule)
+    update_saved_schedule()
+    return jsonify({"success": True})
+
+
+@app.route("/update_order", methods=["GET", "POST"])
+def update_order():
+    data = request.get_json()
+    new_order = data.get("order", [])
+    # Here you’d update your database or file
+    # For example:
+    # for index, media_id in enumerate(new_order):
+    #     Media.query.filter_by(id=media_id).update({'position': index})
+    # db.session.commit()
+    update_saved_schedule(new_order)
+    return jsonify({"success": True})
 
 
 if __name__ == "__main__":
