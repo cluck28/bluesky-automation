@@ -41,7 +41,9 @@ cache = Cache(app)
 
 # Config
 USER_HANDLE = os.getenv("CLIENT_USERNAME")
-UPLOAD_FOLDER = os.path.abspath("./static/uploads")
+UPLOAD_PATH = "uploads"
+WEB_PATH = os.path.abspath("./static")
+UPLOAD_FOLDER = os.path.join(WEB_PATH, UPLOAD_PATH)
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -143,7 +145,8 @@ def upload():
 @app.route("/gallery")
 def gallery():
     media_files = os.listdir(app.config["UPLOAD_FOLDER"])
-    media_paths = [os.path.join(app.config["UPLOAD_FOLDER"], f) for f in media_files]
+    media_paths = [os.path.join(UPLOAD_PATH, f) for f in media_files]
+    print(media_paths)
     feed_posts = get_user_feed()
     external_paths = [thumb.embed.thumbnail for thumb in feed_posts]
     likes = [post.like_count for post in feed_posts]

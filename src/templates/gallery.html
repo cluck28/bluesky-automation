@@ -6,10 +6,10 @@
         <div class="col">
             <div class="card image-container">
                 {% if media.lower().endswith(('png', 'jpg', 'jpeg', 'gif')) %}
-                    <img src="{{ url_for('static', filename='../' + media) }}" class="card-img-top" alt="media">
+                    <img src="{{ url_for('static', filename=media) }}" class="card-img-top" alt="media">
                 {% elif media.lower().endswith('mp4') %}
                     <video class="card-img-top" controls>
-                        <source src="{{ url_for('static', filename='../' + media) }}" type="video/mp4">
+                        <source src="{{ url_for('static', filename=media) }}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 {% endif %}
