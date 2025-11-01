@@ -35,7 +35,6 @@ from bluesky_client.get_post_reposts import get_post_reposts
 from bluesky_client.get_profile import get_followers, get_follows, get_profile
 from bluesky_client.schemas.profile import Profile
 from scheduler.scheduler_utils import (
-    get_queue_rules,
     get_saved_schedule,
     update_queue_rules,
     update_saved_schedule,
@@ -50,6 +49,10 @@ USER_HANDLE = os.getenv("CLIENT_USERNAME")
 UPLOAD_PATH = "uploads"
 WEB_PATH = os.path.abspath("./static")
 UPLOAD_FOLDER = os.path.join(WEB_PATH, UPLOAD_PATH)
+SCHEDULE_FILE_PATH = "schedule/schedule.csv"
+QUEUE_RULES_FILE_PATH = "schedule/rules.csv"
+SCHEDULE_FOLDER = os.path.join(WEB_PATH, SCHEDULE_FILE_PATH)
+RULES_FOLDER = os.path.join(WEB_PATH, QUEUE_RULES_FILE_PATH)
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -144,14 +147,23 @@ def upload():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            schedule = get_saved_schedule(SCHEDULE_FOLDER)
+            schedule.append(
+                {
+                    "path": os.path.join(UPLOAD_PATH, filename),
+                    "text": None,
+                    "date": None,
+                    "status": None,
+                }
+            )
+            update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER, schedule)
             return redirect(url_for("gallery"))
     return render_template("upload.html")
 
 
 @app.route("/gallery")
 def gallery():
-    media_files = os.listdir(app.config["UPLOAD_FOLDER"])
-    media_paths = [os.path.join(UPLOAD_PATH, f) for f in media_files]
+    media_paths = get_saved_schedule(SCHEDULE_FOLDER)
     feed_posts = get_user_feed()
     external_paths = [thumb.embed.thumbnail for thumb in feed_posts]
     likes = [post.like_count for post in feed_posts]
@@ -254,12 +266,7 @@ def engagement_likes_data():
 
 @app.route("/schedule", methods=["GET", "POST"])
 def schedule():
-    media_files = os.listdir(app.config["UPLOAD_FOLDER"])
-    media_paths = [os.path.join(UPLOAD_PATH, f) for f in media_files]
-    media_items = get_saved_schedule()
-    media_items = []
-    for path in media_paths:
-        media_items.append({"path": path})
+    media_items = get_saved_schedule(SCHEDULE_FOLDER)
     return render_template("schedule.html", media_items=media_items)
 
 
@@ -267,8 +274,8 @@ def schedule():
 def add_rule():
     data = request.get_json()
     new_rule = data.get("rule", [])
-    update_queue_rules(new_rule)
-    update_saved_schedule()
+    update_queue_rules(RULES_FOLDER, new_rule)
+    update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER)
     return jsonify({"success": True})
 
 
@@ -276,12 +283,7 @@ def add_rule():
 def update_order():
     data = request.get_json()
     new_order = data.get("order", [])
-    # Here you’d update your database or file
-    # For example:
-    # for index, media_id in enumerate(new_order):
-    #     Media.query.filter_by(id=media_id).update({'position': index})
-    # db.session.commit()
-    update_saved_schedule(new_order)
+    update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER, new_order)
     return jsonify({"success": True})
 
 
