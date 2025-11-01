@@ -9,7 +9,7 @@ def build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
     # We want to make sure we deduplicate against the uploads
     # We want to make sure every row has an upload
     df = pd.DataFrame(schedule)
-    df.to_csv(file_path)
+    df.to_csv(file_path, index=False)
     return
 
 
