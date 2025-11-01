@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Upload Scheduling</h2>
+<h2>Upcoming Posts</h2>
 <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3 mb-5">
     {% for media in media_paths %}
         <div class="col">
             <div class="card image-container">
                 {% if media.lower().endswith(('png', 'jpg', 'jpeg', 'gif')) %}
-                    <img src="{{ url_for('static', filename='../' + media) }}" class="card-img-top" alt="media">
+                    <img src="{{ url_for('static', filename=media) }}" class="card-img-top" alt="media">
                 {% elif media.lower().endswith('mp4') %}
                     <video class="card-img-top" controls>
-                        <source src="{{ url_for('static', filename='../' + media) }}" type="video/mp4">
+                        <source src="{{ url_for('static', filename=media) }}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 {% endif %}
