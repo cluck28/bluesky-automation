@@ -41,6 +41,8 @@ csvs:
 	@echo "path,text,date,status" > $(SCHEDULE_FILE)
 	@echo "path,text,date,status" > $(RULES_FILE)
 	@echo "CSV files created in $(SCHEDULE_DIR)/"
+	@touch $(LOGS_DIR)/run_scheduler.log
+	@echo "Log files created in $(LOGS_DIR)/"
 
 # Copy .env.dev to .env if not exists
 env:
@@ -53,21 +55,27 @@ env:
 		echo "No $(ENV_TEMPLATE) found, skipping .env creation."; \
 	fi
 
-# Add cron job (runs every hour)
 cron:
 	@echo "Setting up cron job..."
-	@crontab -l 2>/dev/null | grep -F "$(CRON_JOB)" >/dev/null || \
-	( crontab -l 2>/dev/null; echo $(CRON_JOB) ) | crontab -
-	@echo "Cron job installed (if not already present)."
+	@tmpfile=$$(mktemp); \
+	crontab -l 2>/dev/null | grep -v -F "$(CRON_JOB)" > $$tmpfile; \
+	echo "$(CRON_JOB)" >> $$tmpfile; \
+	crontab $$tmpfile; \
+	rm -f $$tmpfile; \
+	echo "Cron job installed (duplicates avoided)."
 
 # Clean up
 clean:
 	@rm -rf $(VENV_DIR)
 	@rm -rf $(UPLOADS_DIR)
 	@rm -rf $(SCHEDULE_DIR)
+	@rm -rf $(LOGS_DIR)
 	@echo "Cleaned up environment and generated files."
 
 clean-cron:
 	@echo "Removing cron job..."
-	@crontab -l 2>/dev/null | grep -v -F "$(CRON_JOB)" | crontab -
-	@echo "Cron job removed."
+	@tmpfile=$$(mktemp); \
+	crontab -l 2>/dev/null | grep -v -F "$(CRON_JOB)" > $$tmpfile; \
+	crontab $$tmpfile; \
+	rm -f $$tmpfile; \
+	echo "Cron job removed (if it existed)."
