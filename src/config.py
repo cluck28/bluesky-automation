@@ -6,7 +6,7 @@ load_dotenv()
 
 
 USER_HANDLE = os.getenv("CLIENT_USERNAME")
-USER_PASSWORD = os.getenv("CLIENT_USERNAME")
+USER_PASSWORD = os.getenv("CLIENT_PASSWORD")
 UPLOAD_PATH = "uploads"
 WEB_PATH = os.path.abspath("./src/static")
 UPLOAD_FOLDER = os.path.join(WEB_PATH, UPLOAD_PATH)
