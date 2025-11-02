@@ -1,8 +1,9 @@
 import os
+import re
 from typing import Dict, List
 
 import pandas as pd
-from atproto import Client
+from atproto import Client, client_utils
 from pydantic import ValidationError
 
 from scheduler.scheduler_utils import get_saved_schedule, update_saved_schedule
@@ -44,28 +45,73 @@ class BlueskyScheduler:
         update_saved_schedule(self.schedule_path, self.rules_path)
         return
 
-    def _publish_post(self, post: ScheduledPost) -> Dict:
-        with open(os.path.join(self.web_path, post.path), "rb") as f:
+    def _send_image(self, text, file_path):
+        tb = client_utils.TextBuilder()
+        parts = re.split(r"(?=(?:#[\w]+))|(?<=[\w])(?=#)", text)
+        print(parts)
+        for part in parts:
+            if "#" not in part:
+                tb.text(part)
+            else:
+                tb.tag(part, part.strip("#"))
+
+        # Build the image embed
+        with open(file_path, "rb") as f:
             image = f.read()
-        out = {}
-        # out = self.client.send_image(post.text, image)
-        return out
+
+        try:
+            result = self.client.send_image(
+                text=tb.build_text(),
+                image=image,
+                image_alt="",
+                facets=tb.build_facets(),
+            )
+        except Exception:
+            return None
+        return result
+
+    def _publish_post(self, post: ScheduledPost) -> Dict:
+        try:
+            file_path = os.path.join(self.web_path, post.path)
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"Image file not found: {file_path}")
+            # Need to format the text correctly
+            # Need to write alt text
+            out = self._send_image(post.text, file_path)
+            return out.uri
+        except FileNotFoundError as e:
+            print(f"Publish failed: missing image file — {e}")
+            return None
+        except PermissionError as e:
+            print(f"Publish failed: permission error — {e}")
+            return None
+        except AttributeError as e:
+            print(f"Publish failed: unexpected client response — {e}")
+            return None
+        except Exception as e:
+            print(f"Unexpected error publishing post: {e}")
+            return None
 
     def run(self):
         if not self.schedule:
+            print("No posts scheduled")
             return
         try:
             posts = self._get_posts()
         except ValidationError:
+            print("Validation of posts failed")
             return
         for post in posts:
-            res = self._publish_post(post)
-            # If res returns happy path
-            if res:
+            post_uri = self._publish_post(post)
+            if post_uri:
+                print(f"Post uploaded {post_uri}")
                 try:
                     self._cleanup_schedule(post)
-                except ValueError:
+                    print("Cleaned up schedule")
+                except KeyError:
+                    print("Unable to clean up schedule after posting")
                     return
             else:
+                print(f"Uploading post failed for post: {post}")
                 continue
         return
