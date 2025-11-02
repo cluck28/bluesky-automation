@@ -8,7 +8,10 @@ load_dotenv()
 USER_HANDLE = os.getenv("CLIENT_USERNAME")
 USER_PASSWORD = os.getenv("CLIENT_PASSWORD")
 UPLOAD_PATH = "uploads"
-WEB_PATH = os.path.abspath("./src/static")
+ROOT_DIR = os.getenv("ROOT_DIR")
+print(ROOT_DIR)
+WEB_PATH = os.path.join(ROOT_DIR, "src/static")
+print(WEB_PATH)
 UPLOAD_FOLDER = os.path.join(WEB_PATH, UPLOAD_PATH)
 SCHEDULE_FILE_PATH = "schedule/schedule.csv"
 QUEUE_RULES_FILE_PATH = "schedule/rules.csv"
