@@ -2,7 +2,6 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
-import pytz
 
 
 def _build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
@@ -22,9 +21,8 @@ def _build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
             current_max += pd.Timedelta(days=1)
             df.at[i, "date"] = current_max
     # Overwrite the hour in the day
-    est = pytz.timezone("US/Eastern")
     df["date"] = df["date"].apply(
-        lambda x: x.astimezone(est).replace(hour=10, minute=0, second=0, microsecond=0)
+        lambda x: x.replace(hour=8, minute=0, second=0, microsecond=0)
     )
     # Define conditions
     df["days_diff"] = (df["date"] - pd.Timestamp.today()).dt.days
