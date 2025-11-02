@@ -33,7 +33,6 @@ def _build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
 
     # Default value if none of the conditions match
     df["status"] = np.select(conditions, values, default="A Long Way Off...")
-    print(df)
     df[["path", "text", "date", "status"]].to_csv(file_path, index=False)
     return
 

@@ -4,18 +4,23 @@ from typing import Dict, List
 import pandas as pd
 from atproto import Client
 
-from scheduler.scheduler_utils import get_saved_schedule
-from scheduler.schemas.scheduled_post import ImageConfig, ScheduledPost
+from scheduler.scheduler_utils import get_saved_schedule, update_saved_schedule
+from scheduler.schemas.scheduled_post import ScheduledPost
 
 
 class BlueskyScheduler:
-    def __init__(self, handle, password, web_path, schedule_folder):
+    def __init__(self, handle, password, web_path, schedule_folder, rules_folder):
         self.client = Client()
         self.client.login(handle, password)
         self.web_path = web_path
+        self.schedule_path = os.path.join(web_path, schedule_folder)
+        self.rules_path = os.path.join(web_path, rules_folder)
         self.schedule = get_saved_schedule(os.path.join(web_path, schedule_folder))
 
     def _validate_post(self, post: ScheduledPost) -> bool:
+        # TODO:
+        # @cluciuk
+        # Need to add validations here
         return True
 
     def _get_posts(self) -> List[ScheduledPost]:
@@ -35,9 +40,14 @@ class BlueskyScheduler:
         return posts
 
     def _cleanup_schedule(self, post: ScheduledPost) -> Dict:
-        image_path = post.path
-        # Remove image from uploads folder
-        # Remove row from schedule
+        df = pd.DataFrame(self.schedule)
+        print(df)
+        df = df[df["path"] != post.path]
+        # write df to csv
+        print(df)
+        df.to_csv(self.schedule_path)
+        # Update
+        update_saved_schedule(self.schedule_path, self.rules_path)
         pass
 
     def _publish_post(self, post: ScheduledPost) -> Dict:
@@ -55,6 +65,7 @@ class BlueskyScheduler:
                 try:
                     res = self._publish_post(post)
                     print(res)
+                    self._cleanup_schedule(post)
                 except ValueError:
                     raise ValueError
         pass
