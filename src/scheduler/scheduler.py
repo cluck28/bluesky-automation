@@ -41,14 +41,10 @@ class BlueskyScheduler:
 
     def _cleanup_schedule(self, post: ScheduledPost) -> Dict:
         df = pd.DataFrame(self.schedule)
-        print(df)
         df = df[df["path"] != post.path]
-        # write df to csv
-        print(df)
-        df.to_csv(self.schedule_path)
-        # Update
+        df[["path", "text", "date", "status"]].to_csv(self.schedule_path, index=False)
         update_saved_schedule(self.schedule_path, self.rules_path)
-        pass
+        return
 
     def _publish_post(self, post: ScheduledPost) -> Dict:
         with open(os.path.join(self.web_path, post.path), "rb") as f:
