@@ -3,6 +3,7 @@ from typing import Dict, List
 
 import pandas as pd
 from atproto import Client
+from pydantic import ValidationError
 
 from scheduler.scheduler_utils import get_saved_schedule, update_saved_schedule
 from scheduler.schemas.scheduled_post import ScheduledPost
@@ -17,26 +18,23 @@ class BlueskyScheduler:
         self.rules_path = os.path.join(web_path, rules_folder)
         self.schedule = get_saved_schedule(os.path.join(web_path, schedule_folder))
 
-    def _validate_post(self, post: ScheduledPost) -> bool:
-        # TODO:
-        # @cluciuk
-        # Need to add validations here
-        return True
-
     def _get_posts(self) -> List[ScheduledPost]:
         df = pd.DataFrame(self.schedule)
         df["date"] = pd.to_datetime(df["date"])
         df = df[df["date"] <= pd.Timestamp.today()]
         posts = []
         for record in df.to_dict(orient="records"):
-            posts.append(
-                ScheduledPost(
-                    path=record["path"],
-                    text=record["text"],
-                    date=record["date"],
-                    status=record["status"],
+            try:
+                posts.append(
+                    ScheduledPost(
+                        path=record["path"],
+                        text=record["text"],
+                        date=record["date"],
+                        status=record["status"],
+                    )
                 )
-            )
+            except ValidationError:
+                raise ValidationError
         return posts
 
     def _cleanup_schedule(self, post: ScheduledPost) -> Dict:
@@ -54,14 +52,20 @@ class BlueskyScheduler:
         return out
 
     def run(self):
-        posts = self._get_posts()
-        print(posts)
+        if not self.schedule:
+            return
+        try:
+            posts = self._get_posts()
+        except ValidationError:
+            return
         for post in posts:
-            if self._validate_post(post):
+            res = self._publish_post(post)
+            # If res returns happy path
+            if res:
                 try:
-                    res = self._publish_post(post)
-                    print(res)
                     self._cleanup_schedule(post)
                 except ValueError:
-                    raise ValueError
-        pass
+                    return
+            else:
+                continue
+        return

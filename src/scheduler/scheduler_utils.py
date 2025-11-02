@@ -47,7 +47,8 @@ def update_saved_schedule(file_path: str, queue_file_path: str, new_order: List 
     if new_order:
         _build_schedule(file_path, new_order, rules)
     schedule = get_saved_schedule(file_path)
-    _build_schedule(file_path, schedule, rules)
+    if schedule:
+        _build_schedule(file_path, schedule, rules)
     return
 
 
