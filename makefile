@@ -3,9 +3,12 @@ VENV_DIR=bluesky
 STATIC_DIR=./src/static
 UPLOADS_DIR=$(STATIC_DIR)/uploads
 SCHEDULE_DIR=$(STATIC_DIR)/schedule
+LOGS_DIR=./logs
 SCHEDULE_FILE=$(SCHEDULE_DIR)/schedule.csv
 RULES_FILE=$(SCHEDULE_DIR)/rules.csv
 REQ_FILE=requirements.txt
+ENV_TEMPLATE=.env.dev
+ENV_FILE=.env
 CRON_JOB="15 * * * * cd $(shell pwd) && . $(VENV_DIR)/bin/activate && python src/run_scheduler.py >> logs/run_scheduler.log 2>&1"
 
 # Default target
@@ -30,13 +33,25 @@ venv:
 dirs:
 	@mkdir -p $(UPLOADS_DIR)
 	@mkdir -p $(SCHEDULE_DIR)
-	@echo "Directories created: $(UPLOADS_DIR), $(SCHEDULE_DIR)"
+	@mkdir -p $(LOGS_DIR)
+	@echo "Directories created: $(UPLOADS_DIR), $(SCHEDULE_DIR), $(LOGS_DIR)"
 
 # Create CSV files
 csvs:
 	@echo "path,text,date,status" > $(SCHEDULE_FILE)
 	@echo "path,text,date,status" > $(RULES_FILE)
 	@echo "CSV files created in $(SCHEDULE_DIR)/"
+
+# Copy .env.dev to .env if not exists
+env:
+	@if [ -f $(ENV_FILE) ]; then \
+		echo "$(ENV_FILE) already exists, skipping copy."; \
+	elif [ -f $(ENV_TEMPLATE) ]; then \
+		cp $(ENV_TEMPLATE) $(ENV_FILE); \
+		echo "Copied $(ENV_TEMPLATE) to $(ENV_FILE)."; \
+	else \
+		echo "No $(ENV_TEMPLATE) found, skipping .env creation."; \
+	fi
 
 # Add cron job (runs every hour)
 cron:
