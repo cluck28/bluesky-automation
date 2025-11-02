@@ -1,8 +1,3 @@
-
----
-
-### **Makefile**
-```makefile
 # Variables
 VENV_DIR=bluesky
 STATIC_DIR=./src/static
@@ -10,15 +5,26 @@ UPLOADS_DIR=$(STATIC_DIR)/uploads
 SCHEDULE_DIR=$(STATIC_DIR)/schedule
 SCHEDULE_FILE=$(SCHEDULE_DIR)/schedule.csv
 RULES_FILE=$(SCHEDULE_DIR)/rules.csv
+REQ_FILE=requirements.txt
+CRON_JOB="15 * * * * cd $(shell pwd) && . $(VENV_DIR)/bin/activate && python src/run_scheduler.py >> logs/run_scheduler.log 2>&1"
 
 # Default target
-setup: venv dirs csvs
+setup: venv dirs csvs cron
 	@echo "Setup complete."
+
+teardown: clean clean-cron
+	@echo: "Teardown complete"
 
 # Create virtual environment
 venv:
 	@test -d $(VENV_DIR) || python3 -m venv $(VENV_DIR)
 	@echo "Virtual environment created at $(VENV_DIR)/"
+	@if [ -f $(REQ_FILE) ]; then \
+		echo "Installing dependencies from $(REQ_FILE)..."; \
+		. $(VENV_DIR)/bin/activate && pip install --upgrade pip && pip install -r $(REQ_FILE); \
+	else \
+		echo "No $(REQ_FILE) found, skipping dependency installation."; \
+	fi
 
 # Create required directories
 dirs:
@@ -32,9 +38,21 @@ csvs:
 	@echo "path,text,date,status" > $(RULES_FILE)
 	@echo "CSV files created in $(SCHEDULE_DIR)/"
 
+# Add cron job (runs every hour)
+cron:
+	@echo "Setting up cron job..."
+	@crontab -l 2>/dev/null | grep -F "$(CRON_JOB)" >/dev/null || \
+	( crontab -l 2>/dev/null; echo $(CRON_JOB) ) | crontab -
+	@echo "Cron job installed (if not already present)."
+
 # Clean up
 clean:
 	@rm -rf $(VENV_DIR)
 	@rm -rf $(UPLOADS_DIR)
 	@rm -rf $(SCHEDULE_DIR)
 	@echo "Cleaned up environment and generated files."
+
+clean-cron:
+	@echo "Removing cron job..."
+	@crontab -l 2>/dev/null | grep -v -F "$(CRON_JOB)" | crontab -
+	@echo "Cron job removed."
