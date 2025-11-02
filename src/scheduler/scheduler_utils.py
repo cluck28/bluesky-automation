@@ -20,6 +20,10 @@ def _build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
         if pd.isna(df.at[i, "date"]):
             current_max += pd.Timedelta(days=1)
             df.at[i, "date"] = current_max
+    # Overwrite the hour in the day
+    df["date"] = df["date"].apply(
+        lambda x: x.replace(hour=8, minute=0, second=0, microsecond=0)
+    )
     # Define conditions
     df["days_diff"] = (df["date"] - pd.Timestamp.today()).dt.days
     conditions = [
@@ -33,7 +37,6 @@ def _build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
 
     # Default value if none of the conditions match
     df["status"] = np.select(conditions, values, default="A Long Way Off...")
-    print(df)
     df[["path", "text", "date", "status"]].to_csv(file_path, index=False)
     return
 
@@ -48,7 +51,8 @@ def update_saved_schedule(file_path: str, queue_file_path: str, new_order: List 
     if new_order:
         _build_schedule(file_path, new_order, rules)
     schedule = get_saved_schedule(file_path)
-    _build_schedule(file_path, schedule, rules)
+    if schedule:
+        _build_schedule(file_path, schedule, rules)
     return
 
 
