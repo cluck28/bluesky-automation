@@ -212,3 +212,5 @@ bluesky/
 src/static/uploads/
 
 src/static/schedule/
+
+logs/
