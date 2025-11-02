@@ -14,5 +14,7 @@ PASSWORD = os.getenv("CLIENT_PASSWORD")
 
 
 if __name__ == "__main__":
-    scheduler = BlueskyScheduler(HANDLE, PASSWORD, WEB_PATH, SCHEDULE_FILE_PATH, QUEUE_RULES_FILE_PATH)
+    scheduler = BlueskyScheduler(
+        HANDLE, PASSWORD, WEB_PATH, SCHEDULE_FILE_PATH, QUEUE_RULES_FILE_PATH
+    )
     scheduler.run()
