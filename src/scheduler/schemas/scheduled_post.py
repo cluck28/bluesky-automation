@@ -12,4 +12,3 @@ class ScheduledPost(BaseModel):
     text: str
     date: datetime
     status: str
-    image_config: ImageConfig

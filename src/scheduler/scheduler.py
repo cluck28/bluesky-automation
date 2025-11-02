@@ -1,3 +1,4 @@
+import os
 from typing import Dict, List
 
 import pandas as pd
@@ -6,15 +7,13 @@ from atproto import Client
 from scheduler.scheduler_utils import get_saved_schedule
 from scheduler.schemas.scheduled_post import ImageConfig, ScheduledPost
 
-IMAGE_CONFIG = ImageConfig(meta={})
-
 
 class BlueskyScheduler:
-    def __init__(self, handle, password, schedule_path):
+    def __init__(self, handle, password, web_path, schedule_folder):
         self.client = Client()
         self.client.login(handle, password)
-        self.client_did = self.client.me.did
-        self.schedule = get_saved_schedule(schedule_path)
+        self.web_path = web_path
+        self.schedule = get_saved_schedule(os.path.join(web_path, schedule_folder))
 
     def _validate_post(self, post: ScheduledPost) -> bool:
         return True
@@ -31,7 +30,6 @@ class BlueskyScheduler:
                     text=record["text"],
                     date=record["date"],
                     status=record["status"],
-                    image_config=IMAGE_CONFIG,
                 )
             )
         return posts
@@ -43,14 +41,10 @@ class BlueskyScheduler:
         pass
 
     def _publish_post(self, post: ScheduledPost) -> Dict:
-        text = post.text
-        with open(post.path, "rb") as f:
+        with open(os.path.join(self.web_path, post.path), "rb") as f:
             image = f.read()
-        image_aspect_ratio = post.image_config
-        print(text)
-        print(image_aspect_ratio)
         out = {}
-        # out = self.client.send_image(text, image, image_aspect_ratio)
+        # out = self.client.send_image(post.text, image)
         return out
 
     def run(self):
