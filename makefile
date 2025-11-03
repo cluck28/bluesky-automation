@@ -41,8 +41,6 @@ csvs:
 	@echo "path,text,date,status" > $(SCHEDULE_FILE)
 	@echo "path,text,date,status" > $(RULES_FILE)
 	@echo "CSV files created in $(SCHEDULE_DIR)/"
-	@touch $(LOGS_DIR)/run_scheduler.log
-	@echo "Log files created in $(LOGS_DIR)/"
 
 # Copy .env.dev to .env if not exists
 env:
