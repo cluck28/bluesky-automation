@@ -25,6 +25,7 @@ teardown: clean clean-cron
 
 # Create virtual environment
 venv:
+	@echo $(ROOT_DIR)
 	@test -d $(VENV_DIR) || python3 -m venv $(VENV_DIR)
 	@echo "Virtual environment created at $(VENV_DIR)/"
 	@if [ -f $(REQ_FILE) ]; then \
