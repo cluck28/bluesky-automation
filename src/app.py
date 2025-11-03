@@ -1,7 +1,6 @@
 import os
 from typing import List
 
-import pandas as pd
 from atproto import Client
 from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_caching import Cache
@@ -34,6 +33,15 @@ from bluesky_client.get_post_likes import get_post_likes
 from bluesky_client.get_post_reposts import get_post_reposts
 from bluesky_client.get_profile import get_followers, get_follows, get_profile
 from bluesky_client.schemas.profile import Profile
+from config import (
+    ALLOWED_EXTENSIONS,
+    RULES_FOLDER,
+    SCHEDULE_FOLDER,
+    UPLOAD_FOLDER,
+    UPLOAD_PATH,
+    USER_HANDLE,
+    USER_PASSWORD,
+)
 from scheduler.scheduler_utils import (
     get_saved_schedule,
     update_queue_rules,
@@ -45,15 +53,6 @@ app.config["CACHE_TYPE"] = "simple"  # or 'redis', 'filesystem', etc.
 cache = Cache(app)
 
 # Config
-USER_HANDLE = os.getenv("CLIENT_USERNAME")
-UPLOAD_PATH = "uploads"
-WEB_PATH = os.path.abspath("./static")
-UPLOAD_FOLDER = os.path.join(WEB_PATH, UPLOAD_PATH)
-SCHEDULE_FILE_PATH = "schedule/schedule.csv"
-QUEUE_RULES_FILE_PATH = "schedule/rules.csv"
-SCHEDULE_FOLDER = os.path.join(WEB_PATH, SCHEDULE_FILE_PATH)
-RULES_FOLDER = os.path.join(WEB_PATH, QUEUE_RULES_FILE_PATH)
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "mp4"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 if not os.path.exists(UPLOAD_FOLDER):
@@ -66,9 +65,7 @@ def allowed_file(filename):
 
 def login_client() -> tuple[Client, str]:
     client = Client()
-    client_username = os.getenv("CLIENT_USERNAME")
-    client_password = os.getenv("CLIENT_PASSWORD")
-    client.login(client_username, client_password)
+    client.login(USER_HANDLE, USER_PASSWORD)
     client_did = client.me.did
     return client, client_did
 
