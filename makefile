@@ -9,7 +9,12 @@ RULES_FILE=$(SCHEDULE_DIR)/rules.csv
 REQ_FILE=requirements.txt
 ENV_TEMPLATE=.env.dev
 ENV_FILE=.env
-CRON_JOB="15 * * * * cd $(shell pwd) && . $(VENV_DIR)/bin/activate && python src/run_scheduler.py >> logs/run_scheduler.log 2>&1"
+# Get env file params for ROOT_DIR
+ifneq (,$(wildcard .env))
+    include .env
+    export $(shell sed 's/=.*//' .env)
+endif
+CRON_JOB="15 * * * * echo "Cron ran at $(date)" >> $(ROOT_DIR)/logs/run_scheduler.log; export PYTHONPATH=$(ROOT_DIR) && $(ROOT_DIR)/bluesky/bin/python $(ROOT_DIR)/src/run_scheduler.py >> $(ROOT_DIR)/logs/run_scheduler.log 2>&1"
 
 # Default target
 setup: venv dirs csvs cron
