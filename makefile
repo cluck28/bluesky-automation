@@ -14,7 +14,7 @@ ifneq (,$(wildcard .env))
     include .env
     export $(shell sed 's/=.*//' .env)
 endif
-CRON_JOB="15 * * * * echo "Cron ran at $(date)" >> $(ROOT_DIR)/logs/run_scheduler.log; export PYTHONPATH=$(ROOT_DIR) && $(ROOT_DIR)/bluesky/bin/python $(ROOT_DIR)/src/run_scheduler.py >> $(ROOT_DIR)/logs/run_scheduler.log 2>&1"
+CRON_JOB="15 * * * * echo \"Cron ran at \$$(date)\" >> $(ROOT_DIR)/logs/run_scheduler.log; export PYTHONPATH=$(ROOT_DIR) && $(ROOT_DIR)/bluesky/bin/python $(ROOT_DIR)/src/run_scheduler.py >> $(ROOT_DIR)/logs/run_scheduler.log 2>&1"
 
 # Default target
 setup: venv dirs csvs cron
@@ -25,7 +25,6 @@ teardown: clean clean-cron
 
 # Create virtual environment
 venv:
-	@echo $(ROOT_DIR)
 	@test -d $(VENV_DIR) || python3 -m venv $(VENV_DIR)
 	@echo "Virtual environment created at $(VENV_DIR)/"
 	@if [ -f $(REQ_FILE) ]; then \
@@ -47,6 +46,7 @@ csvs:
 	@echo "path,text,date,status" > $(SCHEDULE_FILE)
 	@echo "path,text,date,status" > $(RULES_FILE)
 	@echo "CSV files created in $(SCHEDULE_DIR)/"
+	@touch $(LOGS_DIR)/run_scheduler.log
 
 # Copy .env.dev to .env if not exists
 env:
@@ -60,13 +60,14 @@ env:
 	fi
 
 cron:
-	@echo "Setting up cron job..."
-	@tmpfile=$$(mktemp); \
-	crontab -l 2>/dev/null | grep -v -F "$(CRON_JOB)" > $$tmpfile; \
-	echo "$(CRON_JOB)" >> $$tmpfile; \
-	crontab $$tmpfile; \
-	rm -f $$tmpfile; \
-	echo "Cron job installed (duplicates avoided)."
+	@echo "Installing cron job (appending) ..."
+	@echo $(CRON_JOB)
+	@{ crontab -l 2>/dev/null || true; \
+	  printf '%s\n' $(CRON_JOB); \
+	} | crontab -
+	@echo "Installed. Current crontab:"
+	@crontab -l
+
 
 # Clean up
 clean:
