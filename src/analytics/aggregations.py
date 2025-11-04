@@ -330,3 +330,23 @@ def cohort_curves_likes(engagement_df: DataFrame, period: str) -> Dict:
             },
         ],
     }
+
+
+def agg_post_engagement_by_post_day(feed_df: DataFrame) -> Dict:
+    df = feed_df.copy()
+    df["date_day_part"] = df["indexed_at"].dt.day_of_week
+    grouped_df = df.groupby("date_day_part", as_index=False)["like_count"].mean()
+    return {
+        "labels": grouped_df["date_day_part"].to_list(),
+        "values": grouped_df["like_count"].to_list(),
+    }
+
+
+def agg_post_engagement_by_post_hour(feed_df: DataFrame) -> Dict:
+    df = feed_df.copy()
+    df["date_hour_part"] = df["indexed_at"].dt.hour
+    grouped_df = df.groupby("date_hour_part", as_index=False)["like_count"].mean()
+    return {
+        "labels": grouped_df["date_hour_part"].to_list(),
+        "values": grouped_df["like_count"].to_list(),
+    }

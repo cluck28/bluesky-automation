@@ -2,6 +2,7 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
+import random
 
 
 def _build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
@@ -22,7 +23,7 @@ def _build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
             df.at[i, "date"] = current_max
     # Overwrite the hour in the day
     df["date"] = df["date"].apply(
-        lambda x: x.replace(hour=8, minute=0, second=0, microsecond=0)
+        lambda x: x.replace(hour=random.randint(0, 23), minute=0, second=0, microsecond=0)
     )
     # Define conditions
     df["days_diff"] = (df["date"] - pd.Timestamp.today()).dt.days
