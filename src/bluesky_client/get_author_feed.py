@@ -80,7 +80,11 @@ def get_author_feed(client: Client, client_did: str, limit: int = 30) -> List[Po
                 repost_count=post.repost_count,
                 bookmark_count=post.bookmarkCount,
             )
-            cleaned_data.append(parsed_post)
+            # Ignore text posts
+            if parsed_post.embed.embed_type != "other":
+                # Only main posts and not replies
+                if not post.record.reply:
+                    cleaned_data.append(parsed_post)
         cursor = data.cursor
         if not cursor:
             break

@@ -128,6 +128,24 @@
             <canvas id="averageLikesByTypeStackedChart"></canvas>
         </div>
     </div>
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Average Likes by Day of Week</h2>
+            <p>Placeholder text.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="averageLikesByDay"></canvas>
+        </div>
+    </div>
+    <div class="chart-row">
+        <div class="chart-text">
+            <h2>Average Likes by Hour of Day</h2>
+            <p>Placeholder text.</p>
+        </div>
+        <div class="chart-box">
+            <canvas id="averageLikesByHour"></canvas>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -137,6 +155,8 @@
     const chartData4 = {{ stacked_totals | tojson }};
     const chartData5 = {{ stacked_averages | tojson }};
     const chartData6 = {{ average_likes_by_type | tojson }};
+    const chartData7 = {{ post_engagement_by_post_day | tojson }};
+    const chartData8 = {{ post_engagement_by_post_hour | tojson }};
     
     const ctx1 = document.getElementById('totalLikesChart').getContext('2d');
     const ctx2 = document.getElementById('averageLikesChart').getContext('2d');
@@ -144,6 +164,8 @@
     const ctx4 = document.getElementById('totalInteractionsStackedChart').getContext('2d');
     const ctx5 = document.getElementById('averageInteractionsStackedChart').getContext('2d');
     const ctx6 = document.getElementById('averageLikesByTypeStackedChart').getContext('2d');
+    const ctx7 = document.getElementById('averageLikesByDay').getContext('2d');
+    const ctx8 = document.getElementById('averageLikesByHour').getContext('2d');
     new Chart(ctx1, {
         type: 'bar',
         data: {
@@ -309,6 +331,78 @@
     new Chart(ctx6, {
         type: 'bar',
         data: chartData6,
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx7, {
+        type: 'bar',
+        data: {
+            labels: chartData7.labels,
+            datasets: [{
+                label: 'Average Likes',
+                data: chartData7.values,
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.1)'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#eee'
+                    }
+                }
+            }
+        }
+    });
+    new Chart(ctx8, {
+        type: 'bar',
+        data: {
+            labels: chartData8.labels,
+            datasets: [{
+                label: 'Average Likes',
+                data: chartData8.values,
+                backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
         options: {
             responsive: true,
             scales: {

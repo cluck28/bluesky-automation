@@ -10,6 +10,8 @@ from werkzeug.utils import secure_filename
 from analytics.aggregations import (
     agg_engagement_by_hour,
     agg_engagement_rate,
+    agg_post_engagement_by_post_day,
+    agg_post_engagement_by_post_hour,
     agg_user_feed_dataframe,
     cohort_curves_likes,
     embed_type_agg_user_feed_dataframe,
@@ -208,6 +210,8 @@ def analytics():
     avg_likes_by_type = embed_type_agg_user_feed_dataframe(
         feed_df, "average_likes", "like_count", "mean", period
     )
+    post_engagement_by_post_day = agg_post_engagement_by_post_day(feed_df)
+    post_engagement_by_post_hour = agg_post_engagement_by_post_hour(feed_df)
     return render_template(
         "analytics.html",
         handle=handle,
@@ -228,6 +232,8 @@ def analytics():
         stacked_totals=stacked_totals,
         stacked_averages=stacked_averages,
         average_likes_by_type=avg_likes_by_type,
+        post_engagement_by_post_day=post_engagement_by_post_day,
+        post_engagement_by_post_hour=post_engagement_by_post_hour,
     )
 
 
@@ -280,14 +286,22 @@ def add_rule():
 def update_order():
     data = request.get_json()
     old_schedule = get_saved_schedule(SCHEDULE_FOLDER)
+    min_date = min([item["date"] for item in old_schedule])
     new_schedule = []
+    i = 0
     for item in data.get("order", []):
         for old_entries in old_schedule:
             if old_entries["path"] == item:
                 old_text = old_entries["text"]
-        new_schedule.append(
-            {"path": item, "text": old_text, "date": None, "status": None}
-        )
+        if i == 0:
+            new_schedule.append(
+                {"path": item, "text": old_text, "date": min_date, "status": None}
+            )
+        else:
+            new_schedule.append(
+                {"path": item, "text": old_text, "date": None, "status": None}
+            )
+        i += 1
     update_saved_schedule(SCHEDULE_FOLDER, RULES_FOLDER, new_schedule)
     media_items = get_saved_schedule(SCHEDULE_FOLDER)
     return render_template("_sortable_list.html", media_items=media_items)
