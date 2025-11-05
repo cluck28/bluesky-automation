@@ -1,13 +1,61 @@
+import io
 import os
 import re
 from typing import Dict, List
 
 import pandas as pd
 from atproto import Client, client_utils
+from PIL import Image
 from pydantic import ValidationError
 
 from scheduler.scheduler_utils import get_saved_schedule, update_saved_schedule
 from scheduler.schemas.scheduled_post import ScheduledPost
+
+
+def compress_image_for_upload(
+    image_data: bytes,
+    size_limit_bytes: int = 1_048_576,
+    step_quality: int = 5,
+    min_quality: int = 40,
+    resize_factor: float = 0.9,
+) -> bytes:
+    """
+    Iteratively compress an image (from bytes) until it's under size_limit_bytes.
+    Returns final JPEG bytes suitable for upload (no disk writes).
+
+    Parameters:
+        image_data (bytes): Original image data (any format).
+        size_limit_bytes (int): Max allowed size (default 1 MB).
+        step_quality (int): How much to lower quality per iteration.
+        min_quality (int): Minimum JPEG quality threshold.
+        resize_factor (float): Scale factor for downscaling if needed.
+    """
+    img = Image.open(io.BytesIO(image_data)).convert("RGB")
+    quality = 95
+    width, height = img.size
+
+    while True:
+        # Save to memory buffer
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=quality, optimize=True)
+        size = buffer.tell()
+
+        if size <= size_limit_bytes or (quality <= min_quality and width < 500):
+            buffer.seek(0)
+            print(
+                f"✅ Compressed: {size/1024:.1f} KB | quality={quality} | {width}x{height}"
+            )
+            return buffer.getvalue()
+
+        # Try reducing quality first
+        if quality > min_quality:
+            quality -= step_quality
+        else:
+            # If quality too low, downscale image
+            width = int(width * resize_factor)
+            height = int(height * resize_factor)
+            img = img.resize((width, height), Image.LANCZOS)
+            quality = 90  # reset quality upward to regain some sharpness
 
 
 class BlueskyScheduler:
@@ -59,10 +107,13 @@ class BlueskyScheduler:
         with open(file_path, "rb") as f:
             image = f.read()
 
+        # Resize
+        compressed_image = compress_image_for_upload(image)
+
         try:
             result = self.client.send_image(
                 text=tb.build_text(),
-                image=image,
+                image=compressed_image,
                 image_alt="",
                 facets=tb.build_facets(),
             )
