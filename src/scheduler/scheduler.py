@@ -5,6 +5,7 @@ from typing import Dict, List
 
 import pandas as pd
 from atproto import Client, client_utils
+from atproto_client.models.app.bsky.embed.defs import AspectRatio
 from PIL import Image
 from pydantic import ValidationError
 
@@ -18,7 +19,7 @@ def compress_image_for_upload(
     step_quality: int = 5,
     min_quality: int = 40,
     resize_factor: float = 0.9,
-) -> bytes:
+) -> tuple[bytes, dict]:
     """
     Iteratively compress an image (from bytes) until it's under size_limit_bytes.
     Returns final JPEG bytes suitable for upload (no disk writes).
@@ -45,7 +46,7 @@ def compress_image_for_upload(
             print(
                 f"✅ Compressed: {size/1024:.1f} KB | quality={quality} | {width}x{height}"
             )
-            return buffer.getvalue()
+            return buffer.getvalue(), AspectRatio(height=height, width=width)
 
         # Try reducing quality first
         if quality > min_quality:
@@ -108,7 +109,7 @@ class BlueskyScheduler:
             image = f.read()
 
         # Resize
-        compressed_image = compress_image_for_upload(image)
+        compressed_image, aspect_ratio = compress_image_for_upload(image)
 
         try:
             result = self.client.send_image(
@@ -116,6 +117,7 @@ class BlueskyScheduler:
                 image=compressed_image,
                 image_alt="",
                 facets=tb.build_facets(),
+                image_aspect_ratio=aspect_ratio,
             )
         except Exception:
             return None
