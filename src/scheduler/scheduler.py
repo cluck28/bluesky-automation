@@ -18,7 +18,7 @@ def prepare_image_for_bluesky_upload(
     size_limit_bytes: int = 976_560,  # 1 MB
     step_quality: int = 5,
     min_quality: int = 40,
-    resize_factor: float = 0.9
+    resize_factor: float = 0.9,
 ):
     """
     Normalize, compress, and resize image until under size_limit_bytes.
@@ -41,7 +41,9 @@ def prepare_image_for_bluesky_upload(
 
         if size <= size_limit_bytes or (quality <= min_quality and width < 500):
             buffer.seek(0)
-            print(f"✅ Ready for upload: {size/1024:.1f} KB | {width}x{height} | q={quality}")
+            print(
+                f"✅ Ready for upload: {size/1024:.1f} KB | {width}x{height} | q={quality}"
+            )
             return buffer.getvalue(), AspectRatio(width=width, height=height)
 
         if quality > min_quality:
@@ -52,7 +54,6 @@ def prepare_image_for_bluesky_upload(
             height = int(height * resize_factor)
             img = img.resize((width, height), Image.LANCZOS)
             quality = 90  # reset slightly higher to avoid over-blurring
-
 
 
 class BlueskyScheduler:
