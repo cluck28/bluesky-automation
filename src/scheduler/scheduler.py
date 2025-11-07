@@ -94,7 +94,6 @@ class BlueskyScheduler:
     def _send_image(self, text, file_path):
         tb = client_utils.TextBuilder()
         parts = re.split(r"(?=(?:#[\w]+))|(?<=[\w])(?=#)", text)
-        print(parts)
         for part in parts:
             if "#" not in part:
                 tb.text(part)
