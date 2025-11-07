@@ -24,7 +24,7 @@ def _build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
     # Overwrite the hour in the day
     df["date"] = df["date"].apply(
         lambda x: x.replace(
-            hour=random.randint(0, 23), minute=0, second=0, microsecond=0
+            hour=random.randint(6, 12), minute=0, second=0, microsecond=0
         )
     )
     # Define conditions

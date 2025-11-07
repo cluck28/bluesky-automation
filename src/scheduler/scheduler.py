@@ -6,37 +6,35 @@ from typing import Dict, List
 import pandas as pd
 from atproto import Client, client_utils
 from atproto_client.models.app.bsky.embed.defs import AspectRatio
-from PIL import Image
+from PIL import Image, ImageOps
 from pydantic import ValidationError
 
 from scheduler.scheduler_utils import get_saved_schedule, update_saved_schedule
 from scheduler.schemas.scheduled_post import ScheduledPost
 
 
-def compress_image_for_upload(
+def prepare_image_for_bluesky_upload(
     image_data: bytes,
-    size_limit_bytes: int = 1_048_576,
+    size_limit_bytes: int = 976_560,  # 1 MB
     step_quality: int = 5,
     min_quality: int = 40,
     resize_factor: float = 0.9,
-) -> tuple[bytes, dict]:
+):
     """
-    Iteratively compress an image (from bytes) until it's under size_limit_bytes.
-    Returns final JPEG bytes suitable for upload (no disk writes).
+    Normalize, compress, and resize image until under size_limit_bytes.
+    Returns (compressed_bytes, width, height, quality).
+    """
 
-    Parameters:
-        image_data (bytes): Original image data (any format).
-        size_limit_bytes (int): Max allowed size (default 1 MB).
-        step_quality (int): How much to lower quality per iteration.
-        min_quality (int): Minimum JPEG quality threshold.
-        resize_factor (float): Scale factor for downscaling if needed.
-    """
-    img = Image.open(io.BytesIO(image_data)).convert("RGB")
+    # --- Step 1: Normalize orientation (fix sideways EXIF images)
+    img = Image.open(io.BytesIO(image_data))
+    img = ImageOps.exif_transpose(img)  # apply rotation per EXIF
+    img = img.convert("RGB")  # ensure consistent color mode
+
     quality = 95
     width, height = img.size
 
+    # --- Step 2: Iteratively reduce size
     while True:
-        # Save to memory buffer
         buffer = io.BytesIO()
         img.save(buffer, format="JPEG", quality=quality, optimize=True)
         size = buffer.tell()
@@ -44,19 +42,18 @@ def compress_image_for_upload(
         if size <= size_limit_bytes or (quality <= min_quality and width < 500):
             buffer.seek(0)
             print(
-                f"✅ Compressed: {size/1024:.1f} KB | quality={quality} | {width}x{height}"
+                f"✅ Ready for upload: {size/1024:.1f} KB | {width}x{height} | q={quality}"
             )
-            return buffer.getvalue(), AspectRatio(height=height, width=width)
+            return buffer.getvalue(), AspectRatio(width=width, height=height)
 
-        # Try reducing quality first
         if quality > min_quality:
             quality -= step_quality
         else:
-            # If quality too low, downscale image
+            # downscale dimensions proportionally
             width = int(width * resize_factor)
             height = int(height * resize_factor)
             img = img.resize((width, height), Image.LANCZOS)
-            quality = 90  # reset quality upward to regain some sharpness
+            quality = 90  # reset slightly higher to avoid over-blurring
 
 
 class BlueskyScheduler:
@@ -97,7 +94,6 @@ class BlueskyScheduler:
     def _send_image(self, text, file_path):
         tb = client_utils.TextBuilder()
         parts = re.split(r"(?=(?:#[\w]+))|(?<=[\w])(?=#)", text)
-        print(parts)
         for part in parts:
             if "#" not in part:
                 tb.text(part)
@@ -109,7 +105,7 @@ class BlueskyScheduler:
             image = f.read()
 
         # Resize
-        compressed_image, aspect_ratio = compress_image_for_upload(image)
+        compressed_image, aspect_ratio = prepare_image_for_bluesky_upload(image)
 
         try:
             result = self.client.send_image(
