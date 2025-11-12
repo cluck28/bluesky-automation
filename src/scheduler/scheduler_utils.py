@@ -19,7 +19,7 @@ def _build_schedule(file_path: str, schedule: List[Dict], rules: List[Dict]):
         current_max = df["date"].max(skipna=True)
     for i in range(len(df)):
         if pd.isna(df.at[i, "date"]):
-            current_max += pd.Timedelta(days=1)
+            current_max += pd.Timedelta(days=random.randint(1, 3))
             df.at[i, "date"] = current_max
     # Overwrite the hour in the day
     df["date"] = df["date"].apply(
